@@ -8,6 +8,8 @@ const { defineConfig } = require("@playwright/test");
  */
 module.exports = defineConfig({
   testDir: "./tests",
+  // Siembra usuario/taller/datos base antes de la suite (adiós semillas manuales).
+  globalSetup: "./global-setup.js",
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,

@@ -71,6 +71,24 @@ async function main() {
   );
   console.log(`✅ Firestore users/${uid} (rol ADMIN, idWorkshop ${ID_WORKSHOP})`);
 
+  // 2b) Mecánico del taller (el asistente de nueva entrada exige asignar uno).
+  await db.collection("users").doc("mecanico-prueba").set(
+    {
+      uid: "mecanico-prueba",
+      name: "Mecánico",
+      firstSurname: "Prueba",
+      email: "mecanico@ccc.test",
+      rol: "MECANICO",
+      idWorkshop: ID_WORKSHOP,
+      isActive: true,
+      isDeleted: false,
+      createdAt: now,
+      updatedAt: now,
+    },
+    { merge: true },
+  );
+  console.log("✅ Firestore users/mecanico-prueba (rol MECANICO)");
+
   // 3) Taller mínimo
   await db.collection("workshops").doc(ID_WORKSHOP).set(
     { id: ID_WORKSHOP, idWorkshop: ID_WORKSHOP, name: "Taller de Prueba", isDeleted: false, createdAt: now, updatedAt: now },
