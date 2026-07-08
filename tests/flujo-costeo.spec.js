@@ -36,8 +36,16 @@ test("login → entrada → Diagnóstico ✓ → Costeo", async ({ page }) => {
   await page.goto("/registro");
   await expect(page.getByText(/Nissan Versa/i).first()).toBeVisible({ timeout: 15000 });
 
-  // 2) Indicador "Diagnóstico ✓" (verde) = diagnóstico ya hecho, y entrar a la vista
-  const diagBtn = page.getByRole("button", { name: /Diagn[oó]stico/i }).first();
+  // 2) Indicador "Diagnóstico ✓" = diagnóstico ya hecho, y entrar a la vista.
+  //    OJO: el botón se busca DENTRO de la tarjeta del Versa (no .first() de la
+  //    página): otros tests crean entradas más nuevas sin diagnóstico y esas
+  //    aparecen primero en la lista.
+  const versaCard = page
+    .locator("div.rounded-xl.border", { hasText: /Nissan Versa/i })
+    .first();
+  const diagBtn = versaCard
+    .getByRole("button", { name: /Diagn[oó]stico/i })
+    .first();
   await expect(diagBtn).toBeVisible();
   await expect(diagBtn).toContainText("✓"); // ✓ = diagnóstico realizado
   await diagBtn.click();
