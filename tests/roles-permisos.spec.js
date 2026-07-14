@@ -261,4 +261,40 @@ test.describe.serial("Q20 — roles y permisos", () => {
       }
     }
   });
+
+  test("8) EVIDENCIA — usuario legado sin claim: la API lo bloquea aunque Firestore diga ASESOR", async ({ request }) => {
+    // Simula a CUALQUIER usuario de producción creado ANTES de feat/roles-setup:
+    // cuenta de Auth SIN custom claim + doc de Firestore con rol válido.
+    // Demuestra dos cosas a la vez:
+    //   a) el backend es fail-closed (sin claim = sin acceso) ✔ correcto, y
+    //   b) SIN un backfill de claims, TODOS los usuarios existentes quedarán
+    //      fuera el día del deploy (el script backfill-role-claims.js que cita
+    //      AuthContext no existe aún en la rama).
+    const email = `legacy.${s}@ccc.test`;
+
+    // 1) Cuenta de Auth "vieja": signUp directo al emulador (sin claims).
+    const signUp = await request.post(
+      `${AUTH_EMU}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=fake`,
+      { data: { email, password: PASSWORD, returnSecureToken: true } },
+    );
+    expect(signUp.ok()).toBe(true);
+    const { idToken, localId } = await signUp.json();
+    expect(claimsOf(idToken).role, "usuario legado: no debe traer claim").toBeUndefined();
+
+    // 2) Su doc de Firestore dice ASESOR (como cualquier usuario actual).
+    process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || "127.0.0.1:8080";
+    const { initializeApp, getApps } = require("firebase-admin/app");
+    const { getFirestore } = require("firebase-admin/firestore");
+    if (!getApps().length) initializeApp({ projectId: "ccc-taller-refac" });
+    await getFirestore().collection("users").doc(localId).set({
+      uid: localId, email, rol: "ASESOR", idWorkshop: ID_WORKSHOP,
+      isActive: true, isDeleted: false, createdAt: Date.now(), updatedAt: Date.now(),
+    });
+
+    // 3) Y aun así, la API lo rechaza: solo confía en el claim firmado.
+    //    (Clientes es capability que un ASESOR real SÍ tiene — el bloqueo es
+    //    puramente por la falta de claim.)
+    const cli = await api(request, idToken, "get", `/clients?idWorkshop=${ID_WORKSHOP}`);
+    expect(cli.status, "ASESOR legado sin claim → bloqueado (falta backfill)").toBe(403);
+  });
 });
