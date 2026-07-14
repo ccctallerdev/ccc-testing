@@ -24,6 +24,7 @@ process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || "12
 process.env.FIREBASE_AUTH_EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST || "127.0.0.1:9099";
 
 const { initializeApp } = require("firebase-admin/app");
+const { authHeaders } = require("./apiToken");
 const { getFirestore } = require("firebase-admin/firestore");
 
 const API = process.env.API || "http://localhost:3001/v1";
@@ -42,7 +43,7 @@ const ASESOR_B = { id: "asesor-beto", name: "Beto Ramírez" };
 async function post(base, path, body) {
   const res = await fetch(`${base}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) }, // Q20: API blindada
     body: JSON.stringify(body),
   });
   let json = null;

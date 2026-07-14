@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { authHeaders } = require("../apiToken");
 
 /**
  * Q2 (Documento Unificado — "no somos refaccionaria"):
@@ -22,7 +23,7 @@ const MECHANIC_ID = process.env.MECHANIC_ID || "mecanico-prueba";
 // ── Helpers de API ───────────────────────────────────────────────────────────
 
 async function post(request, path, body) {
-  const res = await request.post(`${API}${path}`, { data: body });
+  const res = await request.post(`${API}${path}`, { data: body, headers: await authHeaders() });
   if (!res.ok()) {
     throw new Error(`POST ${path} → ${res.status()}: ${await res.text()}`);
   }
@@ -31,7 +32,7 @@ async function post(request, path, body) {
 }
 
 async function put(request, path, body) {
-  const res = await request.put(`${API}${path}`, { data: body });
+  const res = await request.put(`${API}${path}`, { data: body, headers: await authHeaders() });
   if (!res.ok()) {
     throw new Error(`PUT ${path} → ${res.status()}: ${await res.text()}`);
   }
@@ -40,7 +41,7 @@ async function put(request, path, body) {
 }
 
 async function getJson(request, path) {
-  const res = await request.get(`${API}${path}`);
+  const res = await request.get(`${API}${path}`, { headers: await authHeaders() });
   if (!res.ok()) {
     throw new Error(`GET ${path} → ${res.status()}: ${await res.text()}`);
   }

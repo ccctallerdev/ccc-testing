@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { authHeaders } = require("../apiToken");
 
 /**
  * Centro de Control v2 (respuestas del cliente 10-jul):
@@ -20,7 +21,8 @@ const ADMIN_EMAIL = process.env.SEED_EMAIL || "prueba@ccc.test";
 const ADMIN_PASSWORD = process.env.SEED_PASSWORD || "prueba123";
 
 async function call(request, method, path, body) {
-  const res = await request[method](`${API}${path}`, body ? { data: body } : undefined);
+  // Q20: la API blindada exige el token firmado en CADA llamada.
+  const res = await request[method](`${API}${path}`, { headers: await authHeaders(), ...(body ? { data: body } : {}) });
   if (!res.ok()) {
     throw new Error(`${method.toUpperCase()} ${path} → ${res.status()}: ${await res.text()}`);
   }

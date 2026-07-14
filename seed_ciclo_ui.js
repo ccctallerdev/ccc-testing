@@ -14,6 +14,8 @@
  * USO:  1) emuladores + backend corriendo · 2) node seed_ciclo_ui.js
  */
 
+const { authHeaders } = require("./apiToken");
+
 const API = process.env.API || "http://localhost:3001/v1";
 const ID_WORKSHOP = process.env.ID_WORKSHOP || "taller-prueba";
 const MECANICO = "mecanico-prueba";
@@ -22,7 +24,7 @@ const suffix = String(Date.now()).slice(-5);
 async function call(method, path, body) {
   const res = await fetch(`${API}${path}`, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) }, // Q20: API blindada
     body: body ? JSON.stringify(body) : undefined,
   });
   let json = null;

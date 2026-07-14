@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { authHeaders } = require("../apiToken");
 
 /**
  * Obs 8-jul #1 — Vista por mecánico en el Centro de Producción:
@@ -26,7 +27,8 @@ const MECH_B_PASSWORD = "Mecanico_123";
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function call(request, method, path, body) {
-  const res = await request[method](`${API}${path}`, body ? { data: body } : undefined);
+  // Q20: la API blindada exige el token firmado en CADA llamada.
+  const res = await request[method](`${API}${path}`, { headers: await authHeaders(), ...(body ? { data: body } : {}) });
   if (!res.ok()) {
     throw new Error(`${method.toUpperCase()} ${path} → ${res.status()}: ${await res.text()}`);
   }

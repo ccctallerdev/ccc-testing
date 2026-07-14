@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { authHeaders } = require("../apiToken");
 
 /**
  * JORNADA COMPLETA POR UI — como una persona usando la app, sin semillas de
@@ -264,6 +265,7 @@ test("jornada UI: crear cliente+vehículo+OS → hoja → diagnóstico → coste
   // ── Verificación de fondo (una sola, por API): la OS quedó bien armada ────
   const found = await request.get(
     `${API}/entries?idWorkshop=taller-prueba&approvalState=APROBADA&limit=50&page=1`,
+    { headers: await authHeaders() }, // Q20: API blindada
   );
   const body = await found.json().catch(() => null);
   const rows = body?.data?.entries ?? body?.data ?? [];

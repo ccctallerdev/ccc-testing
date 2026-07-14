@@ -14,6 +14,8 @@
  * Email configurable: `node seed_cliente_app.js correo@test.com`
  */
 
+const { authHeaders } = require("./apiToken");
+
 const API = process.env.API || "http://localhost:3001/v1";
 const ID_WORKSHOP = process.env.ID_WORKSHOP || "taller-prueba";
 const MECHANIC = "mecanico-prueba";
@@ -23,7 +25,7 @@ const EMAIL = process.argv[2] || "cliente.app@ccc.test";
 async function call(method, path, body) {
   const res = await fetch(`${API}${path}`, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) }, // Q20: API blindada
     body: body ? JSON.stringify(body) : undefined,
   });
   const json = await res.json().catch(() => null);

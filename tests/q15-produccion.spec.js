@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { authHeaders } = require("../apiToken");
 
 /**
  * CORE #39/#40 (Q15) + Obs 8-jul #1:
@@ -20,7 +21,8 @@ const PASSWORD = process.env.SEED_PASSWORD || "prueba123";
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function call(request, method, path, body) {
-  const res = await request[method](`${API}${path}`, body ? { data: body } : undefined);
+  // Q20: la API blindada exige el token firmado en CADA llamada.
+  const res = await request[method](`${API}${path}`, { headers: await authHeaders(), ...(body ? { data: body } : {}) });
   if (!res.ok()) {
     throw new Error(`${method.toUpperCase()} ${path} → ${res.status()}: ${await res.text()}`);
   }
@@ -125,13 +127,13 @@ test("Q15: el backend rechaza arrancar el cronómetro sin cotización oficial", 
   const X = await createOs(request, "Z");
 
   // Sin cotización oficial → el start debe fallar con mensaje claro.
-  const denied = await request.post(`${API}/entries/${X.entryId}/production/start`);
+  const denied = await request.post(`${API}/entries/${X.entryId}/production/start`, { headers: await authHeaders() });
   expect(denied.ok()).toBe(false);
   expect(await denied.text()).toMatch(/cotizaci[oó]n oficial/i);
 
   // Con cotización oficial aprobada → arranca.
   await approveWithOfficialQuote(request, X.entryId);
-  const allowed = await request.post(`${API}/entries/${X.entryId}/production/start`);
+  const allowed = await request.post(`${API}/entries/${X.entryId}/production/start`, { headers: await authHeaders() });
   expect(allowed.ok()).toBe(true);
   const body = await allowed.json();
   expect((body?.data ?? body)?.status).toBe("running");

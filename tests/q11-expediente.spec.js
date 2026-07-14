@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { authHeaders } = require("../apiToken");
 
 /**
  * CORE Q11 + Obs#10 — Paquete de expediente:
@@ -20,7 +21,8 @@ const ADMIN_PASSWORD = process.env.SEED_PASSWORD || "prueba123";
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function call(request, method, path, body, { allowFail = false } = {}) {
-  const res = await request[method](`${API}${path}`, body ? { data: body } : undefined);
+  // Q20: la API blindada exige el token firmado en CADA llamada.
+  const res = await request[method](`${API}${path}`, { headers: await authHeaders(), ...(body ? { data: body } : {}) });
   if (!res.ok() && !allowFail) {
     throw new Error(`${method.toUpperCase()} ${path} → ${res.status()}: ${await res.text()}`);
   }

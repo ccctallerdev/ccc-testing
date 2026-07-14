@@ -13,6 +13,8 @@
  * Requiere Node 18+ (usa fetch global). No instala nada.
  */
 
+const { authHeaders } = require("./apiToken");
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIGURACIÓN — edita al menos ID_WORKSHOP
 // ─────────────────────────────────────────────────────────────────────────────
@@ -29,7 +31,7 @@ const suffix = String(Date.now()).slice(-5); // evita choques de VIN/placas al r
 async function post(path, body) {
   const res = await fetch(`${API}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) }, // Q20: API blindada
     body: JSON.stringify(body),
   });
   let json = null;

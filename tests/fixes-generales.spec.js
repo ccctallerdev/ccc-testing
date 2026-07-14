@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { authHeaders } = require("../apiToken");
 
 /**
  * Fixes generales (rama fix/bugs-fixes-general):
@@ -24,7 +25,7 @@ const PASSWORD = process.env.SEED_PASSWORD || "prueba123";
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function post(request, url, body) {
-  const res = await request.post(url, { data: body });
+  const res = await request.post(url, { data: body, headers: await authHeaders() });
   if (!res.ok()) {
     throw new Error(`POST ${url} → ${res.status()}: ${await res.text()}`);
   }
@@ -32,7 +33,7 @@ async function post(request, url, body) {
 }
 
 async function getJson(request, url) {
-  const res = await request.get(url);
+  const res = await request.get(url, { headers: await authHeaders() });
   if (!res.ok()) {
     throw new Error(`GET ${url} → ${res.status()}: ${await res.text()}`);
   }

@@ -44,12 +44,21 @@ async function main() {
   } catch (e) {
     if (e.code === "auth/email-already-exists") {
       user = await auth.getUserByEmail(EMAIL);
-      console.log(`↪️  Usuario de Auth ya existía: ${EMAIL} (uid ${user.uid})`);
+      // Reparar la contraseña al valor esperado por los tests: si alguien la
+      // cambió a mano en la app, la seed la regresa a PASSWORD (idempotente).
+      await auth.updateUser(user.uid, { password: PASSWORD, emailVerified: true });
+      console.log(`↪️  Usuario de Auth ya existía: ${EMAIL} (uid ${user.uid}) — contraseña restablecida a la de la seed`);
     } else {
       throw e;
     }
   }
   const uid = user.uid;
+
+  // 1b) Q20/roles: el backend ahora autoriza por el CUSTOM CLAIM firmado
+  // (`role`), no por el campo de Firestore. Sin claim, TODA la API responde
+  // 403 y la suite entera truena. ADMIN = Dueño (owner) en el nuevo mapeo.
+  await auth.setCustomUserClaims(uid, { role: "ADMIN" });
+  console.log(`✅ Custom claim role='ADMIN' (owner) asignado a ${EMAIL}`);
 
   // 2) Doc de usuario en Firestore (la app carga userData desde aquí).
   //    El campo es `uid` (igual que en la base real), NO `id`.

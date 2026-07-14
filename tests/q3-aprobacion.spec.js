@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { authHeaders } = require("../apiToken");
 
 /**
  * Q3 (Documento Unificado): flujo de aprobación de cotización.
@@ -25,7 +26,7 @@ const PASSWORD = process.env.SEED_PASSWORD || "prueba123";
 // ── Helpers de API ───────────────────────────────────────────────────────────
 
 async function post(request, path, body) {
-  const res = await request.post(`${API}${path}`, { data: body });
+  const res = await request.post(`${API}${path}`, { data: body, headers: await authHeaders() });
   if (!res.ok()) {
     throw new Error(`POST ${path} → ${res.status()}: ${await res.text()}`);
   }
@@ -34,7 +35,7 @@ async function post(request, path, body) {
 }
 
 async function getJson(request, path) {
-  const res = await request.get(`${API}${path}`);
+  const res = await request.get(`${API}${path}`, { headers: await authHeaders() });
   if (!res.ok()) {
     throw new Error(`GET ${path} → ${res.status()}: ${await res.text()}`);
   }
