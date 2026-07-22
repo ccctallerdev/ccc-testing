@@ -210,7 +210,10 @@ test("jornada a entrega: diagnóstico y costeo por UI, ciclo completo hasta ENTR
 
   // ── Aprobar y recorrer el ciclo completo (Q5 automático + manual) ─────────
   await approveOs(request, entryId);
-  expect(await statusOf(request, entryId)).toBe("EN ESPERA");
+  // Observ. 20-Jul: al aprobar se SOLICITA el material automáticamente (orden
+  // de compra desde el costeo) y la máquina Q5 avanza compra→REFACCIONES.
+  // EN ESPERA solo queda para OS aprobadas sin nada que pedir.
+  expect(await statusOf(request, entryId)).toBe("REFACCIONES");
 
   await post(request, `/entries/${entryId}/production/start`);
   await post(request, `/entries/${entryId}/production/finish`);

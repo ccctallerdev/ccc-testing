@@ -127,7 +127,9 @@ test("Q31 API: aprobar 2 de 3 conceptos genera la oficial recortada, aprueba la 
   const entry = await getEntry(request, entryId);
   expect(entry.approvalState).toBe("APROBADA");
   expect(entry.approvedSelection?.quoteId).toBe(resp.officialQuoteId);
-  expect(entry.statusService).toBe("EN ESPERA");
+  // Observ. 20-Jul: la aprobación genera la orden de compra automática de lo
+  // aprobado ⇒ Q5 avanza a REFACCIONES de inmediato (antes quedaba EN ESPERA).
+  expect(entry.statusService).toBe("REFACCIONES");
   // Total oficial denormalizado = solo lo aprobado (1200 + 850).
   expect(entry.officialQuoteTotal).toBe(2050);
 
