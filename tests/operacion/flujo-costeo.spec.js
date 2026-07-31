@@ -29,7 +29,7 @@ async function login(page) {
     .catch(() => {}); // si no auto-redirige, seguimos y navegamos directo
 }
 
-test("login → entrada → Diagnóstico ✓ → Costeo", async ({ page }) => {
+test("login → entrada → Diagnóstico ✓ → Costeo", { tag: ["@ui", "@lento"] }, async ({ page }) => {
   await login(page);
 
   // 1) Lista de entradas de vehículos
@@ -75,7 +75,7 @@ test("login → entrada → Diagnóstico ✓ → Costeo", async ({ page }) => {
  * verificar en una corrida real (no hay data-testid). Descoméntalo y ajusta
  * selectores tras ver la primera corrida en verde.
  */
-test.skip("flujo completo hasta Reparación (esqueleto, ajustar selectores)", async ({ page }) => {
+test.skip("flujo completo hasta Reparación (esqueleto, ajustar selectores)", { tag: ["@ui", "@lento"] }, async ({ page }) => {
   await login(page);
   await page.goto("/registro");
 

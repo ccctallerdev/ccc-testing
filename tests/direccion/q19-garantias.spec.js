@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * CORE #52 (Q19) — Garantías ligadas a la OS de origen:
@@ -101,7 +101,7 @@ async function makeDeliveredOs(request, tag) {
 
 // ── API ──────────────────────────────────────────────────────────────────────
 
-test("Q19 API: garantía ligada a la OS (osSheet), resumen por deltas y resolución", async ({
+test("Q19 API: garantía ligada a la OS (osSheet), resumen por deltas y resolución", { tag: ["@api"] }, async ({
   request,
 }) => {
   test.setTimeout(120_000);
@@ -140,7 +140,7 @@ test("Q19 API: garantía ligada a la OS (osSheet), resumen por deltas y resoluci
 
 // ── UI ───────────────────────────────────────────────────────────────────────
 
-test("Q19 UI: levantar garantía desde el expediente entregado y resolverla", async ({
+test("Q19 UI: levantar garantía desde el expediente entregado y resolverla", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {

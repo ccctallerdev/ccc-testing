@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * Q4 / CORE #31 (Documento Unificado): numeración de cotizaciones por OS.
@@ -107,7 +107,7 @@ const pricedBody = (n) => ({
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-test("Q4: el costeo no genera número; al convertirse en cotización recibe el 01", async ({
+test("Q4: el costeo no genera número; al convertirse en cotización recibe el 01", { tag: ["@api"] }, async ({
   request,
 }) => {
   const { entryId } = await createOs(request);
@@ -137,7 +137,7 @@ test("Q4: el costeo no genera número; al convertirse en cotización recibe el 0
   expect(Number(entry?.quoteSeq)).toBe(1);
 });
 
-test("Q4: la secuencia avanza por cotización con precios (01, 02) e ignora costeos intermedios", async ({
+test("Q4: la secuencia avanza por cotización con precios (01, 02) e ignora costeos intermedios", { tag: ["@api"] }, async ({
   request,
 }) => {
   const { entryId } = await createOs(request);
@@ -153,7 +153,7 @@ test("Q4: la secuencia avanza por cotización con precios (01, 02) e ignora cost
   expect(q2?.quoteNumber).toBe(2);
 });
 
-test("Q4: la numeración reinicia con cada OS", async ({ request }) => {
+test("Q4: la numeración reinicia con cada OS", { tag: ["@api"] }, async ({ request }) => {
   const osA = await createOs(request);
   const osB = await createOs(request);
 

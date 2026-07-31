@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * CORE #39/#40 (Q15) + Obs 8-jul #1:
@@ -98,7 +98,7 @@ async function approveWithOfficialQuote(request, entryId) {
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-test("Q15: producción solo muestra aprobados con cotización oficial", async ({
+test("Q15: producción solo muestra aprobados con cotización oficial", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {
@@ -121,7 +121,7 @@ test("Q15: producción solo muestra aprobados con cotización oficial", async ({
   await expect(page.getByText(`OS ${X.os}`)).toHaveCount(0);
 });
 
-test("Q15: el backend rechaza arrancar el cronómetro sin cotización oficial", async ({
+test("Q15: el backend rechaza arrancar el cronómetro sin cotización oficial", { tag: ["@api"] }, async ({
   request,
 }) => {
   const X = await createOs(request, "Z");

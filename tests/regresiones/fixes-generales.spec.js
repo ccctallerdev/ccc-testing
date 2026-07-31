@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * Fixes generales (rama fix/bugs-fixes-general):
@@ -112,7 +112,7 @@ async function createOsWithQuote(request) {
 
 // ── #3/#10: el asesor queda registrado ───────────────────────────────────────
 
-test("#10: la entrada persiste createdBy/createdByName del asesor", async ({
+test("#10: la entrada persiste createdBy/createdByName del asesor", { tag: ["@api"] }, async ({
   request,
 }) => {
   const { entryId } = await createOsWithQuote(request);
@@ -121,7 +121,7 @@ test("#10: la entrada persiste createdBy/createdByName del asesor", async ({
   expect(entry?.createdByName).toBe("Asesor Prueba");
 });
 
-test("#3: la cita de agenda persiste createdBy/createdByName del asesor", async ({
+test("#3: la cita de agenda persiste createdBy/createdByName del asesor", { tag: ["@api"] }, async ({
   request,
 }) => {
   const marker = `Cita Q3-10 ${Date.now()}`;
@@ -151,7 +151,7 @@ test("#3: la cita de agenda persiste createdBy/createdByName del asesor", async 
 
 // ── Validación de modales (junta) ────────────────────────────────────────────
 
-test("Agenda: Nueva Cita abre limpia y al Guardar señala qué falta (hora en rojo)", async ({
+test("Agenda: Nueva Cita abre limpia y al Guardar señala qué falta (hora en rojo)", { tag: ["@ui"] }, async ({
   page,
 }) => {
   await login(page);
@@ -184,7 +184,7 @@ test("Agenda: Nueva Cita abre limpia y al Guardar señala qué falta (hora en ro
   await expect(phone).not.toHaveClass(/border-red-300/);
 });
 
-test("Agenda: no permite agendar en el pasado", async ({ page }) => {
+test("Agenda: no permite agendar en el pasado", { tag: ["@ui"] }, async ({ page }) => {
   await login(page);
   await page.goto("/agenda");
 
@@ -202,7 +202,7 @@ test("Agenda: no permite agendar en el pasado", async ({ page }) => {
 
 // ── #30/Q16: total en grande arriba de la cotización ─────────────────────────
 
-test("#30: la cotización muestra el Total en grande arriba", async ({
+test("#30: la cotización muestra el Total en grande arriba", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {

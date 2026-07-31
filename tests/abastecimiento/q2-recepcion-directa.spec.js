@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * Q2 (Documento Unificado — "no somos refaccionaria"):
@@ -154,7 +154,7 @@ async function createApprovedOs(request, inventoryId, count) {
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-test("Q2: recepción de compra ligada a OS va directo al auto (no suma stock) y la reparación no descuenta de más", async ({
+test("Q2: recepción de compra ligada a OS va directo al auto (no suma stock) y la reparación no descuenta de más", { tag: ["@api"] }, async ({
   request,
 }) => {
   // Almacén: 1 pieza. La OS necesita 2 → faltante de 1 que se compra por OS.
@@ -199,7 +199,7 @@ test("Q2: recepción de compra ligada a OS va directo al auto (no suma stock) y 
   expect(after?.stockConsumed).toBe(true);
 });
 
-test("Q2 (control): compra general SIN OS sí suma al inventario", async ({
+test("Q2 (control): compra general SIN OS sí suma al inventario", { tag: ["@api"] }, async ({
   request,
 }) => {
   const inventoryId = await createInventoryItem(request, "Filtros Q2", 0);

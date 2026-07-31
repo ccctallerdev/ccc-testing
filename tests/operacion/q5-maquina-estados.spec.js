@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * CORE Q5 — Máquina de estados automática del servicio:
@@ -98,7 +98,7 @@ const statusOf = async (request, entryId) =>
 
 // ── API: el ciclo completo avanza solo y nunca retrocede ─────────────────────
 
-test("Q5 API: aprobación→espera, compra→refacciones, producción→reparación, fin→control de calidad; sin retrocesos", async ({
+test("Q5 API: aprobación→espera, compra→refacciones, producción→reparación, fin→control de calidad; sin retrocesos", { tag: ["@api"] }, async ({
   request,
 }) => {
   test.setTimeout(90_000);
@@ -139,7 +139,7 @@ test("Q5 API: aprobación→espera, compra→refacciones, producción→reparaci
 
 // ── UI: iniciar/terminar desde el Centro de Producción avisa el cambio ───────
 
-test("Q5 UI: Iniciar y Terminar en producción muestran el avance de etapa", async ({
+test("Q5 UI: Iniciar y Terminar en producción muestran el avance de etapa", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {

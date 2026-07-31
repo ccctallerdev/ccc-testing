@@ -7,8 +7,10 @@
  * a la hora), para que specs y seeds se identifiquen igual que la app.
  *
  * Lo usan:
- *   - tests/*.spec.js  → require("../apiToken")
- *   - seed_*.js        → require("./apiToken")
+ *   - los specs → require("#apiToken")   ← alias nativo de Node, declarado en
+ *     el campo "imports" de package.json. Resuelve desde cualquier nivel de
+ *     carpeta, así que reorganizar tests/ ya no rompe las rutas.
+ *   - los seed_*.js → require("./apiToken")
  *
  * Requiere Node 18+ (fetch global) y la seed del usuario admin corrida
  * (global-setup lo hace solo).

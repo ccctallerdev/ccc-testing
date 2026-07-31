@@ -10,10 +10,43 @@
  *
  * Ambas semillas son idempotentes/aditivas: correr la suite varias veces
  * no rompe nada.
+ *
+ * Dos atajos que evitan fricción al correr por carpetas:
+ *   · Si solo se pidió el proyecto `publico`, NO siembra: el sitio público es
+ *     anónimo y no toca la base, así que basta el frontend en :3000.
+ *   · Avisa si hay specs sueltos en tests/, porque esos no pertenecen a
+ *     ningún project y pasarían desapercibidos sin ejecutarse nunca.
  */
 const { execSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 
 module.exports = async () => {
+  const sueltos = fs
+    .readdirSync(path.join(__dirname, "tests"))
+    .filter((f) => f.endsWith(".spec.js"));
+  if (sueltos.length) {
+    console.warn(
+      "\n⚠️  Specs sueltos en tests/ — NINGÚN proyecto los ejecuta:\n   " +
+        sueltos.join("\n   ") +
+        "\n   Muévelos a una carpeta de área (ver tests/README.md).\n",
+    );
+  }
+
+  // OJO: Playwright NO filtra `config.projects` aquí — siempre llegan TODOS los
+  // proyectos, se haya pedido uno o la suite entera. La única forma fiable de
+  // saber qué se pidió es leer los argumentos. (Se probó: con --project=publico
+  // config.projects seguía trayendo los siete.)
+  const pedidos = [];
+  process.argv.forEach((a, i) => {
+    if (a.startsWith("--project=")) pedidos.push(a.slice("--project=".length));
+    else if (a === "--project" && process.argv[i + 1]) pedidos.push(process.argv[i + 1]);
+  });
+  if (pedidos.length > 0 && pedidos.every((n) => n === "publico")) {
+    console.log("\n🌱 Solo el sitio público: no hacen falta semillas.\n");
+    return;
+  }
+
   console.log("\n🌱 Global setup: sembrando datos base…");
   try {
     execSync("node seed_emulator_user.js", { stdio: "inherit", cwd: __dirname });

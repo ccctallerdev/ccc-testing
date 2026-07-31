@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * Observaciones 20-Jul — "Un dato se captura UNA sola vez":
@@ -114,7 +114,7 @@ test.describe.serial("Observ. 20-Jul — costeo → orden automática → abaste
   let X; // { entryId, os, quoteId }
   let poId;
 
-  test("1) aprobar genera la orden de compra SOLA, con el costo del proveedor, y avanza a REFACCIONES", async ({ request }) => {
+  test("1) aprobar genera la orden de compra SOLA, con el costo del proveedor, y avanza a REFACCIONES", { tag: ["@api"] }, async ({ request }) => {
     X = await makeOs(request);
     const sheets = (await getJson(request, `/entries/${X.entryId}/service-sheet?limit=10`))?.serviceSheets ?? [];
 
@@ -148,7 +148,7 @@ test.describe.serial("Observ. 20-Jul — costeo → orden automática → abaste
     poId = mine.id;
   });
 
-  test("2) semáforo con el proveedor: SOLICITADA → BUSCANDO → NO_ENCONTRADA (y rechaza inválidos)", async ({ request }) => {
+  test("2) semáforo con el proveedor: SOLICITADA → BUSCANDO → NO_ENCONTRADA (y rechaza inválidos)", { tag: ["@api"] }, async ({ request }) => {
     await post(request, `/purchase-orders/${poId}/sourcing`, { sourcingStatus: "BUSCANDO" });
     let po = await getJson(request, `/purchase-orders/${poId}`);
     expect(po.sourcingStatus).toBe("BUSCANDO");
@@ -164,7 +164,7 @@ test.describe.serial("Observ. 20-Jul — costeo → orden automática → abaste
     await post(request, `/purchase-orders/${poId}/sourcing`, { sourcingStatus: "BUSCANDO" });
   });
 
-  test("3) UI Abastecimiento: vista por OS con indicador de recepción y datos del vehículo", async ({ page }) => {
+  test("3) UI Abastecimiento: vista por OS con indicador de recepción y datos del vehículo", { tag: ["@ui"] }, async ({ page }) => {
     await loginUI(page);
     await page.goto("/abastecimiento");
 

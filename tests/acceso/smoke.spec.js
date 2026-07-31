@@ -6,7 +6,7 @@ const { test, expect } = require("@playwright/test");
  * (El flujo completo Costeo→…→Reparación se agregará después, ya con
  *  los emuladores + un usuario de prueba en el Auth emulator.)
  */
-test("la app carga y muestra el login", async ({ page }) => {
+test("la app carga y muestra el login", { tag: ["@ui", "@humo"] }, async ({ page }) => {
   await page.goto("/login");
   await expect(page).toHaveURL(/login/i);
   // Debe existir al menos un campo de correo/usuario y uno de contraseña.

@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * CORE Q11 + Obs#10 — Paquete de expediente:
@@ -117,7 +117,7 @@ async function login(page, email, password) {
 
 // ── 1. Bitácora de etapas ────────────────────────────────────────────────────
 
-test("Q11 API: statusHistory registra cada etapa con timestamp y en orden", async ({
+test("Q11 API: statusHistory registra cada etapa con timestamp y en orden", { tag: ["@api"] }, async ({
   request,
 }) => {
   test.setTimeout(90_000);
@@ -146,7 +146,7 @@ test("Q11 API: statusHistory registra cada etapa con timestamp y en orden", asyn
 
 // ── 2. Expediente cerrado (ENTREGADO = solo lectura) ─────────────────────────
 
-test("Q11: OS entregada rechaza cambios al diagnóstico (API 409) y la UI muestra el candado", async ({
+test("Q11: OS entregada rechaza cambios al diagnóstico (API 409) y la UI muestra el candado", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {
@@ -242,7 +242,7 @@ test("Q11: OS entregada rechaza cambios al diagnóstico (API 409) y la UI muestr
 
 // ── 3. Historial de cotizaciones tras aprobación ─────────────────────────────
 
-test("Q11 UI: tras aprobar se ve el historial de cotizaciones con la oficial marcada", async ({
+test("Q11 UI: tras aprobar se ve el historial de cotizaciones con la oficial marcada", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {
@@ -270,7 +270,7 @@ test("Q11 UI: tras aprobar se ve el historial de cotizaciones con la oficial mar
 
 // ── 4. Índice de OS del vehículo ─────────────────────────────────────────────
 
-test("Q11 UI: el expediente lista todas las OS del vehículo con acceso a cada una", async ({
+test("Q11 UI: el expediente lista todas las OS del vehículo con acceso a cada una", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {

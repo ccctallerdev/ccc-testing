@@ -76,7 +76,7 @@ const menuItem = (page, name) =>
 test.describe.serial("Q20 — roles y permisos", () => {
   let ownerToken;
 
-  test("1) el Dueño crea usuarios con los 5 roles y el claim queda firmado", async ({ request }) => {
+  test("1) el Dueño crea usuarios con los 5 roles y el claim queda firmado", { tag: ["@api"] }, async ({ request }) => {
     ownerToken = await tokenFor(request, OWNER_EMAIL, OWNER_PASSWORD);
     // El claim del propio dueño (la seed lo siembra): ADMIN → owner.
     expect(claimsOf(ownerToken).role).toBe("ADMIN");
@@ -101,7 +101,7 @@ test.describe.serial("Q20 — roles y permisos", () => {
     }
   });
 
-  test("2) Asesor: ve venta, no compras — menú, rebote de ruta y 403 del back", async ({ page, request }) => {
+  test("2) Asesor: ve venta, no compras — menú, rebote de ruta y 403 del back", { tag: ["@ui"] }, async ({ page, request }) => {
     await loginUI(page, USERS.advisor.email, PASSWORD);
 
     // Matriz de pantallas (doc): asesor ✓ clientes/entrada/servicio/garantías.
@@ -124,7 +124,7 @@ test.describe.serial("Q20 — roles y permisos", () => {
     expect(sup.status, "GET /suppliers como asesor").toBe(403);
   });
 
-  test("3) Compras: ve costos, no clientes ni precio de venta", async ({ page, request }) => {
+  test("3) Compras: ve costos, no clientes ni precio de venta", { tag: ["@ui"] }, async ({ page, request }) => {
     await loginUI(page, USERS.purchasing.email, PASSWORD);
 
     await expect(menuItem(page, "Abastecimiento")).toBeVisible();
@@ -150,7 +150,7 @@ test.describe.serial("Q20 — roles y permisos", () => {
     }
   });
 
-  test("4) Mecánico: sin dashboard — su home es Servicio", async ({ page, request }) => {
+  test("4) Mecánico: sin dashboard — su home es Servicio", { tag: ["@ui"] }, async ({ page, request }) => {
     await loginUI(page, USERS.mechanic.email, PASSWORD);
 
     // Al intentar el dashboard, el guard lo aterriza en /servicios.
@@ -170,7 +170,7 @@ test.describe.serial("Q20 — roles y permisos", () => {
     expect(dash.status, "GET /dashboard como mecánico").toBe(403);
   });
 
-  test("5) Valor Atrapado: viaja al Dueño y NO viaja al Administrador", async ({ request }) => {
+  test("5) Valor Atrapado: viaja al Dueño y NO viaja al Administrador", { tag: ["@api"] }, async ({ request }) => {
     // Dueño: healthValue presente en la respuesta del dashboard.
     const owner = await api(request, ownerToken, "get", `/dashboard?idWorkshop=${ID_WORKSHOP}`);
     expect(owner.status).toBeLessThan(300);
@@ -183,7 +183,7 @@ test.describe.serial("Q20 — roles y permisos", () => {
     expect(admin.data?.healthValue, "healthValue NO debe viajar al admin").toBeUndefined();
   });
 
-  test("6) Administrador (Gerente) en UI: pantalla completa pero SIN Valor Atrapado", async ({ page }) => {
+  test("6) Administrador (Gerente) en UI: pantalla completa pero SIN Valor Atrapado", { tag: ["@ui"] }, async ({ page }) => {
     // Nota del doc: "el Administrador entra a las mismas pantallas que el
     // Dueño, pero los indicadores financieros más sensibles no se le muestran".
     await loginUI(page, USERS.admin.email, PASSWORD);
@@ -202,7 +202,7 @@ test.describe.serial("Q20 — roles y permisos", () => {
     await expect(page.getByText(/Valor Atrapado/i)).toHaveCount(0);
   });
 
-  test("7) layout por rol: los 12 ítems del menú contra la matriz del doc", async ({ browser }) => {
+  test("7) layout por rol: los 12 ítems del menú contra la matriz del doc", { tag: ["@api"] }, async ({ browser }) => {
     test.setTimeout(120_000); // 5 logins en serie
 
     // Matriz de pantallas del doc ejecutivo (✓/✗ por rol), tal cual:
@@ -262,7 +262,7 @@ test.describe.serial("Q20 — roles y permisos", () => {
     }
   });
 
-  test("8) EVIDENCIA — usuario legado sin claim: la API lo bloquea aunque Firestore diga ASESOR", async ({ request }) => {
+  test("8) EVIDENCIA — usuario legado sin claim: la API lo bloquea aunque Firestore diga ASESOR", { tag: ["@api"] }, async ({ request }) => {
     // Simula a CUALQUIER usuario de producción creado ANTES de feat/roles-setup:
     // cuenta de Auth SIN custom claim + doc de Firestore con rol válido.
     // Demuestra dos cosas a la vez:

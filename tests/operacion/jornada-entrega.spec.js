@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * JORNADA HASTA LA ENTREGA (Q11) — cierra el ciclo que jornada-ui deja en la
@@ -103,7 +103,7 @@ async function login(page) {
 
 // ── 1. Regla: sin diagnóstico NO hay entrega ─────────────────────────────────
 
-test("entrega bloqueada: una OS sin diagnóstico no se puede ENTREGAR (API 409 + toast con el motivo)", async ({
+test("entrega bloqueada: una OS sin diagnóstico no se puede ENTREGAR (API 409 + toast con el motivo)", { tag: ["@ui", "@lento"] }, async ({
   page,
   request,
 }) => {
@@ -149,7 +149,7 @@ test("entrega bloqueada: una OS sin diagnóstico no se puede ENTREGAR (API 409 +
 
 // ── 2. Jornada completa: diagnóstico + costeo por UI → … → ENTREGADO ────────
 
-test("jornada a entrega: diagnóstico y costeo por UI, ciclo completo hasta ENTREGADO y expediente cerrado", async ({
+test("jornada a entrega: diagnóstico y costeo por UI, ciclo completo hasta ENTREGADO y expediente cerrado", { tag: ["@ui", "@lento"] }, async ({
   page,
   request,
 }) => {

@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 const fs = require("fs");
 
 /**
@@ -109,7 +109,7 @@ async function expectValidPdf(download) {
   expect(buf.byteLength, "tamaño razonable").toBeGreaterThan(2000);
 }
 
-test("PDF real: Imprimir cotización descarga un PDF válido con folio en el nombre", async ({
+test("PDF real: Imprimir cotización descarga un PDF válido con folio en el nombre", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {
@@ -127,7 +127,7 @@ test("PDF real: Imprimir cotización descarga un PDF válido con folio en el nom
   await expectValidPdf(download);
 });
 
-test("PDF real: Imprimir hoja de servicio descarga un PDF válido", async ({
+test("PDF real: Imprimir hoja de servicio descarga un PDF válido", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {

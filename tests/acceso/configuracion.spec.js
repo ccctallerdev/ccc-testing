@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * Configuración persistida:
@@ -35,7 +35,7 @@ const put = (r, p, b) => call(r, "put", p, b);
 // nos da un "taller limpio" sin tocar el de las demás pruebas.
 const freshWorkshopId = () => `taller-config-${Date.now()}`;
 
-test("Q18: serviceFollowUpMonths default 6 y editable en el modelo operativo", async ({
+test("Q18: serviceFollowUpMonths default 6 y editable en el modelo operativo", { tag: ["@api"] }, async ({
   request,
 }) => {
   const idw = freshWorkshopId();
@@ -56,7 +56,7 @@ test("Q18: serviceFollowUpMonths default 6 y editable en el modelo operativo", a
   expect(Number(after?.osStart)).toBe(Number(before?.osStart));
 });
 
-test("Q18: el schema rechaza valores inválidos (0 meses)", async ({ request }) => {
+test("Q18: el schema rechaza valores inválidos (0 meses)", { tag: ["@api"] }, async ({ request }) => {
   const idw = freshWorkshopId();
   const res = await request.put(
     `${API}/settings/operating-model?idWorkshop=${idw}`,
@@ -65,7 +65,7 @@ test("Q18: el schema rechaza valores inválidos (0 meses)", async ({ request }) 
   expect(res.ok()).toBe(false); // positive() → 0 no es válido
 });
 
-test("#60: sessionTimeoutMinutes se guarda por usuario y persiste", async ({
+test("#60: sessionTimeoutMinutes se guarda por usuario y persiste", { tag: ["@api"] }, async ({
   request,
 }) => {
   // Usuario semilla del taller de prueba (Admin Prueba).

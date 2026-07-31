@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * Clientes v2 (Q32) — cliente sin cuenta + lookup exacto + signup público:
@@ -31,7 +31,7 @@ const getJson = (r, p, o) => call(r, "get", p, undefined, o);
 
 const suffix = () => `${String(Date.now()).slice(-7)}${Math.floor(Math.random() * 90 + 10)}`;
 
-test("Q32 API: POST /clients crea SOLO el cliente (sin cuenta) y el duplicado responde 409 CLIENT_EXISTS", async ({
+test("Q32 API: POST /clients crea SOLO el cliente (sin cuenta) y el duplicado responde 409 CLIENT_EXISTS", { tag: ["@api"] }, async ({
   request,
 }) => {
   const s = suffix();
@@ -65,7 +65,7 @@ test("Q32 API: POST /clients crea SOLO el cliente (sin cuenta) y el duplicado re
   expect(dup.raw?.data?.clientId).toBe(created.data.id);
 });
 
-test("Q32 API: lookup es EXACTO y enmascarado; la afiliación cambia affiliated", async ({
+test("Q32 API: lookup es EXACTO y enmascarado; la afiliación cambia affiliated", { tag: ["@api"] }, async ({
   request,
 }) => {
   const s = suffix();
@@ -109,7 +109,7 @@ test("Q32 API: lookup es EXACTO y enmascarado; la afiliación cambia affiliated"
   expect(found.affiliated).toBe(true);
 });
 
-test("Q32 API: /public/signup crea SOLO la cuenta (sin cliente) y valida contraseña", async ({
+test("Q32 API: /public/signup crea SOLO la cuenta (sin cliente) y valida contraseña", { tag: ["@api"] }, async ({
   request,
 }) => {
   const s = suffix();
@@ -151,7 +151,7 @@ test("Q32 API: /public/signup crea SOLO la cuenta (sin cliente) y valida contras
   expect(dup.status).toBeGreaterThanOrEqual(400);
 });
 
-test("Q32 UI: cancelar la afiliación NO guarda nada y permite corregir el cliente sin perder la captura", async ({
+test("Q32 UI: cancelar la afiliación NO guarda nada y permite corregir el cliente sin perder la captura", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {
@@ -292,7 +292,7 @@ test("Q32 UI: cancelar la afiliación NO guarda nada y permite corregir el clien
   expect(created.data.id).toBeTruthy();
 });
 
-test("Q32 UI: el alta detecta al cliente existente y lo AFILIA (confirm) sin duplicar", async ({
+test("Q32 UI: el alta detecta al cliente existente y lo AFILIA (confirm) sin duplicar", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {

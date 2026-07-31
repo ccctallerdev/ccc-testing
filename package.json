@@ -6,7 +6,19 @@
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",
-    "report": "playwright show-report"
+    "report": "playwright show-report",
+    "test:publico": "playwright test --project=publico",
+    "test:acceso": "playwright test --project=acceso",
+    "test:operacion": "playwright test --project=operacion",
+    "test:comercial": "playwright test --project=comercial",
+    "test:abastecimiento": "playwright test --project=abastecimiento",
+    "test:direccion": "playwright test --project=direccion",
+    "test:regresiones": "playwright test --project=regresiones",
+    "test:api": "playwright test --grep @api",
+    "test:ui": "playwright test --grep @ui",
+    "test:humo": "playwright test --grep @humo",
+    "test:rapido": "playwright test --grep-invert \"@lento|@red\"",
+    "test:sin-red": "playwright test --grep-invert @red"
   },
   "keywords": [],
   "author": "",
@@ -17,5 +29,8 @@
   },
   "dependencies": {
     "firebase-admin": "^14.1.0"
+  },
+  "imports": {
+    "#apiToken": "./apiToken.js"
   }
 }

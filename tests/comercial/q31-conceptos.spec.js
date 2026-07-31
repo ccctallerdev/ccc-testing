@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * CORE Q31/Q12 — Aprobación por CONCEPTOS + cotizaciones ANEXAS + DEFINITIVA:
@@ -95,7 +95,7 @@ const getEntry = (r, entryId) => getJson(r, `/entries/${entryId}`);
 
 // ── 1. Aprobación por conceptos (parcial) ────────────────────────────────────
 
-test("Q31 API: aprobar 2 de 3 conceptos genera la oficial recortada, aprueba la OS y manda el resto a Seguimientos", async ({
+test("Q31 API: aprobar 2 de 3 conceptos genera la oficial recortada, aprueba la OS y manda el resto a Seguimientos", { tag: ["@api"] }, async ({
   request,
 }) => {
   test.setTimeout(90_000);
@@ -147,7 +147,7 @@ test("Q31 API: aprobar 2 de 3 conceptos genera la oficial recortada, aprueba la 
 
 // ── 2. Anexas + definitiva ───────────────────────────────────────────────────
 
-test("Q31 API: la anexa se integra con la oficial en la DEFINITIVA (líneas y anticipos sumados)", async ({
+test("Q31 API: la anexa se integra con la oficial en la DEFINITIVA (líneas y anticipos sumados)", { tag: ["@api"] }, async ({
   request,
 }) => {
   test.setTimeout(90_000);
@@ -205,7 +205,7 @@ test("Q31 API: la anexa se integra con la oficial en la DEFINITIVA (líneas y an
 
 // ── 3. UI: modal de conceptos ────────────────────────────────────────────────
 
-test("Q31 UI: el modal de conceptos desmarca uno, aprueba y muestra la oficial recortada", async ({
+test("Q31 UI: el modal de conceptos desmarca uno, aprueba y muestra la oficial recortada", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {

@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * Centro de Control v2 (respuestas del cliente 10-jul):
@@ -101,7 +101,7 @@ async function makePromisedOs(request, tag, { advance = 400, total = 1000 } = {}
   return { entryId };
 }
 
-test("CCv2 API: ingreso del día neto de anticipos y promesa CUMPLIDA al entregar hoy", async ({
+test("CCv2 API: ingreso del día neto de anticipos y promesa CUMPLIDA al entregar hoy", { tag: ["@api"] }, async ({
   request,
 }) => {
   test.setTimeout(120_000);
@@ -138,7 +138,7 @@ test("CCv2 API: ingreso del día neto de anticipos y promesa CUMPLIDA al entrega
   expect(d.clients.count).toBeGreaterThan(0);
 });
 
-test("CCv2 API: sin avance de etapa por más del umbral ⇒ BLOQUEADO con su valor atrapado", async ({
+test("CCv2 API: sin avance de etapa por más del umbral ⇒ BLOQUEADO con su valor atrapado", { tag: ["@api"] }, async ({
   request,
 }) => {
   test.setTimeout(120_000);
@@ -166,7 +166,7 @@ test("CCv2 API: sin avance de etapa por más del umbral ⇒ BLOQUEADO con su val
   }
 });
 
-test("CCv2 UI: Comandante, Índice CCC, estado del día y promesas visibles", async ({
+test("CCv2 UI: Comandante, Índice CCC, estado del día y promesas visibles", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {

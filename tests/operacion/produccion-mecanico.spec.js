@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * Obs 8-jul #1 — Vista por mecánico en el Centro de Producción:
@@ -106,7 +106,7 @@ async function login(page, email, password) {
   await page.waitForURL((u) => !/\/login/.test(u.pathname), { timeout: 20000 });
 }
 
-test("producción por mecánico: cada quien ve solo lo suyo; el admin ve todo", async ({
+test("producción por mecánico: cada quien ve solo lo suyo; el admin ve todo", { tag: ["@ui", "@lento"] }, async ({
   page,
   request,
 }) => {

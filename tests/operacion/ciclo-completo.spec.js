@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * CICLO DE VIDA COMPLETO DE UNA OS — de crear el cliente a entregar el auto.
@@ -54,7 +54,7 @@ async function login(page) {
     .catch(() => {});
 }
 
-test("ciclo completo: cliente → OS → cotización → aprobar → abastecer → reparar → entregar", async ({
+test("ciclo completo: cliente → OS → cotización → aprobar → abastecer → reparar → entregar", { tag: ["@ui", "@lento"] }, async ({
   page,
   request,
 }) => {

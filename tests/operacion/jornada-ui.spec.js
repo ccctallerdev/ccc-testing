@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * JORNADA COMPLETA POR UI — como una persona usando la app, sin semillas de
@@ -25,7 +25,7 @@ const CLIENTE = `Jornada UI ${suffix}`;
 // Sin guión: el input de placas aplica removeSpecialChar y lo eliminaría.
 const PLACAS = `JOR${suffix.slice(-4)}`;
 
-test("jornada UI: crear cliente+vehículo+OS → hoja → diagnóstico → costeo → cotización → aprobar", async ({
+test("jornada UI: crear cliente+vehículo+OS → hoja → diagnóstico → costeo → cotización → aprobar", { tag: ["@ui", "@lento"] }, async ({
   page,
   request,
 }) => {

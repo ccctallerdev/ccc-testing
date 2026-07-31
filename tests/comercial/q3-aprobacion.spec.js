@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * Q3 (Documento Unificado): flujo de aprobación de cotización.
@@ -161,7 +161,7 @@ async function chooseAprobada(page, card) {
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-test("Q3: OS con 1 cotización → Aprobada aprueba directo (selección automática)", async ({
+test("Q3: OS con 1 cotización → Aprobada aprueba directo (selección automática)", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {
@@ -202,7 +202,7 @@ test("Q3: OS con 1 cotización → Aprobada aprueba directo (selección automát
     );
 });
 
-test("Q3: OS con 2 cotizaciones → redirige a la selección oficial", async ({
+test("Q3: OS con 2 cotizaciones → redirige a la selección oficial", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {
@@ -231,7 +231,7 @@ test("Q3: OS con 2 cotizaciones → redirige a la selección oficial", async ({
   expect(e?.approvalState).toBe("EN ESPERA");
 });
 
-test("Q3: OS solo con costeo (sin precios) → avisa y no aprueba", async ({
+test("Q3: OS solo con costeo (sin precios) → avisa y no aprueba", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {

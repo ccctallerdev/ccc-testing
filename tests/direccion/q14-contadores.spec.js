@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { authHeaders } = require("../apiToken");
+const { authHeaders } = require("#apiToken");
 
 /**
  * CORE #32–#38 (Q14/Q8) — Contadores por fase mutuamente excluyentes:
@@ -105,7 +105,7 @@ async function makeApprovedOs(request, tag, { withDiagnostic = true } = {}) {
 
 // ── 1. Dashboard: fases mutuamente excluyentes ───────────────────────────────
 
-test("Q14 dashboard: aprobado cuenta UNA vez; sale de Aprobados al producir y de todo al entregar", async ({
+test("Q14 dashboard: aprobado cuenta UNA vez; sale de Aprobados al producir y de todo al entregar", { tag: ["@api"] }, async ({
   request,
 }) => {
   test.setTimeout(120_000);
@@ -142,7 +142,7 @@ test("Q14 dashboard: aprobado cuenta UNA vez; sale de Aprobados al producir y de
 
 // ── 2. Bug #34: totalDocs sin entregados ─────────────────────────────────────
 
-test("bug #34: getEntries excludeDelivered no cuenta entregados en el total/paginación", async ({
+test("bug #34: getEntries excludeDelivered no cuenta entregados en el total/paginación", { tag: ["@api"] }, async ({
   request,
 }) => {
   test.setTimeout(120_000);
@@ -176,7 +176,7 @@ test("bug #34: getEntries excludeDelivered no cuenta entregados en el total/pagi
 
 // ── 3. UI: "Hoy" por defecto en Entradas y KPI de hoy en el dashboard ────────
 
-test("Q14 UI: Entradas abre filtrada a Hoy y el dashboard muestra las entradas de hoy", async ({
+test("Q14 UI: Entradas abre filtrada a Hoy y el dashboard muestra las entradas de hoy", { tag: ["@ui"] }, async ({
   page,
   request,
 }) => {
