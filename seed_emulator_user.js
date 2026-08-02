@@ -98,6 +98,42 @@ async function main() {
   );
   console.log("✅ Firestore users/mecanico-prueba (rol MECANICO)");
 
+  // 2c) Usuario TECH_SUPPORT (CMS de marketing, Fase 2): edita planes públicos
+  //     y contenido web en /gestion-contenido. SIN idWorkshop: es rol de
+  //     plataforma, no pertenece a ningún taller. Idempotente como el admin.
+  const TECH_EMAIL = process.env.TECH_EMAIL || "tech@ccc.test";
+  const TECH_PASSWORD = process.env.TECH_PASSWORD || "prueba123";
+  let tech;
+  try {
+    tech = await auth.createUser({ email: TECH_EMAIL, password: TECH_PASSWORD, displayName: "Tech Support", emailVerified: true });
+    console.log(`✅ Usuario de Auth creado: ${TECH_EMAIL} (uid ${tech.uid})`);
+  } catch (e) {
+    if (e.code === "auth/email-already-exists") {
+      tech = await auth.getUserByEmail(TECH_EMAIL);
+      await auth.updateUser(tech.uid, { password: TECH_PASSWORD, emailVerified: true });
+      console.log(`↪️  Usuario de Auth ya existía: ${TECH_EMAIL} — contraseña restablecida`);
+    } else {
+      throw e;
+    }
+  }
+  await auth.setCustomUserClaims(tech.uid, { role: "TECH_SUPPORT" });
+  await db.collection("users").doc(tech.uid).set(
+    {
+      uid: tech.uid,
+      name: "Tech",
+      firstSurname: "Support",
+      secondSurname: "",
+      email: TECH_EMAIL,
+      rol: "TECH_SUPPORT",
+      isActive: true,
+      isDeleted: false,
+      createdAt: now,
+      updatedAt: now,
+    },
+    { merge: true },
+  );
+  console.log(`✅ Firestore users/${tech.uid} (rol TECH_SUPPORT, sin taller) — login: ${TECH_EMAIL} / ${TECH_PASSWORD}`);
+
   // 3) Taller mínimo
   await db.collection("workshops").doc(ID_WORKSHOP).set(
     { id: ID_WORKSHOP, idWorkshop: ID_WORKSHOP, name: "Taller de Prueba", isDeleted: false, createdAt: now, updatedAt: now },
