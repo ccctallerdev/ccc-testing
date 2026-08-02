@@ -13,6 +13,7 @@
     "test:comercial": "playwright test --project=comercial",
     "test:abastecimiento": "playwright test --project=abastecimiento",
     "test:direccion": "playwright test --project=direccion",
+    "test:marketing": "playwright test --project=marketing",
     "test:regresiones": "playwright test --project=regresiones",
     "test:api": "playwright test --grep @api",
     "test:ui": "playwright test --grep @ui",

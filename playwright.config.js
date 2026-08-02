@@ -33,6 +33,7 @@ const AREAS = [
   { name: "comercial",      descripcion: "Clientes, cotización, aprobación y documentos" },
   { name: "abastecimiento", descripcion: "Compras, recepción de refacciones e inventario" },
   { name: "direccion",      descripcion: "Centro de Control, contadores y garantías" },
+  { name: "marketing",      descripcion: "CMS del sitio público (Fase 2): contenido por página, media y volúmenes" },
   { name: "regresiones",    descripcion: "Fixes puntuales que no tienen casa propia" },
 ];
 

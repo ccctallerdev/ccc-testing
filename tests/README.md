@@ -15,6 +15,7 @@ Dos ejes, para poder correr justo lo que necesitas:
 | `comercial` | Todo lo que mira al cliente: alta y afiliación, folios, aprobación de cotizaciones y los documentos que se imprimen. | 5 |
 | `abastecimiento` | Compras, órdenes al proveedor, recepción de refacciones e inventario. | 2 |
 | `direccion` | Lo que ve quien dirige: Centro de Control, contadores por fase y garantías. | 3 |
+| `marketing` | El CMS del sitio público (Fase 2): API de contenido por página, blindaje TECH_SUPPORT, media y volúmenes. Necesita emuladores + API en :3001. | 1 |
 | `regresiones` | Fixes puntuales que no pertenecen a un área concreta. Si esta carpeta crece mucho, es señal de que hace falta un área nueva. | 1 |
 
 ```powershell
@@ -101,6 +102,9 @@ las salta porque el sitio anónimo no toca la base.
 - `ccv2-centro-control.spec.js`
 - `q14-contadores.spec.js`
 - `q19-garantias.spec.js`
+
+**`marketing/`**
+- `cms-site-content.spec.js`
 
 **`regresiones/`**
 - `fixes-generales.spec.js`
