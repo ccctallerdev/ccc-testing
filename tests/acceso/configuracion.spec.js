@@ -31,18 +31,16 @@ async function call(request, method, path, body) {
 const getJson = (r, p) => call(r, "get", p);
 const put = (r, p, b) => call(r, "put", p, b);
 
-// El modelo operativo mezcla defaults por taller: un idWorkshop desechable
-// nos da un "taller limpio" sin tocar el de las demás pruebas.
-const freshWorkshopId = () => `taller-config-${Date.now()}`;
+// NOTA: con el aislamiento entre talleres (Paso 2) el owner SOLO puede tocar SU
+// taller — un idWorkshop desechable daría 403. Se usa ID_WORKSHOP (el propio) y
+// se restaura el valor al final para no ensuciar otras corridas.
 
-test("Q18: serviceFollowUpMonths default 6 y editable en el modelo operativo", { tag: ["@api"] }, async ({
+test("Q18: serviceFollowUpMonths editable en el modelo operativo (el guardado parcial no pisa lo demás)", { tag: ["@api"] }, async ({
   request,
 }) => {
-  const idw = freshWorkshopId();
+  const idw = ID_WORKSHOP;
 
-  // Default para un taller sin configuración previa.
   const before = await getJson(request, `/settings/operating-model?idWorkshop=${idw}`);
-  expect(Number(before?.serviceFollowUpMonths)).toBe(6);
 
   // Guardar 8 meses.
   await put(request, `/settings/operating-model?idWorkshop=${idw}`, {
@@ -51,16 +49,24 @@ test("Q18: serviceFollowUpMonths default 6 y editable en el modelo operativo", {
   const after = await getJson(request, `/settings/operating-model?idWorkshop=${idw}`);
   expect(Number(after?.serviceFollowUpMonths)).toBe(8);
 
-  // El guardado parcial NO pisa los demás parámetros (siguen sus defaults).
+  // El guardado parcial NO pisa los demás parámetros.
   expect(Number(after?.daysAtRisk)).toBe(Number(before?.daysAtRisk));
   expect(Number(after?.osStart)).toBe(Number(before?.osStart));
+
+  // Restaurar al default (6) para no ensuciar corridas futuras.
+  await put(request, `/settings/operating-model?idWorkshop=${idw}`, {
+    serviceFollowUpMonths: 6,
+  });
+  const restored = await getJson(request, `/settings/operating-model?idWorkshop=${idw}`);
+  expect(Number(restored?.serviceFollowUpMonths)).toBe(6);
 });
 
 test("Q18: el schema rechaza valores inválidos (0 meses)", { tag: ["@api"] }, async ({ request }) => {
-  const idw = freshWorkshopId();
+  const idw = ID_WORKSHOP;
+  // Con token válido y taller propio, el 0 lo rechaza el SCHEMA (no el auth).
   const res = await request.put(
     `${API}/settings/operating-model?idWorkshop=${idw}`,
-    { data: { serviceFollowUpMonths: 0 } },
+    { headers: await authHeaders(), data: { serviceFollowUpMonths: 0 } },
   );
   expect(res.ok()).toBe(false); // positive() → 0 no es válido
 });

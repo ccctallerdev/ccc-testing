@@ -26,6 +26,9 @@ const { getAuth } = require("firebase-admin/auth");
 const EMAIL = process.env.SEED_EMAIL || "prueba@ccc.test";
 const PASSWORD = process.env.SEED_PASSWORD || "prueba123";
 const ID_WORKSHOP = process.env.ID_WORKSHOP || "taller-prueba";
+// Segundo taller (AJENO al admin de prueba) para probar el aislamiento entre
+// talleres: el owner de taller-prueba NO debe poder tocar este.
+const ID_WORKSHOP_B = process.env.ID_WORKSHOP_B || "taller-prueba-b";
 // ─────────────────────────────────────────────────────────────────────────────
 
 initializeApp({ projectId: "ccc-taller-refac" });
@@ -57,8 +60,11 @@ async function main() {
   // 1b) Q20/roles: el backend ahora autoriza por el CUSTOM CLAIM firmado
   // (`role`), no por el campo de Firestore. Sin claim, TODA la API responde
   // 403 y la suite entera truena. ADMIN = Dueño (owner) en el nuevo mapeo.
-  await auth.setCustomUserClaims(uid, { role: "ADMIN" });
-  console.log(`✅ Custom claim role='ADMIN' (owner) asignado a ${EMAIL}`);
+  // Aislamiento multi-tenant: el claim firmado también lleva `idWorkshop`
+  // (igual que en prod tras el Paso 1). El middleware verifyWorkshopAccess lo
+  // usa para bloquear el acceso a talleres ajenos.
+  await auth.setCustomUserClaims(uid, { role: "ADMIN", idWorkshop: ID_WORKSHOP });
+  console.log(`✅ Custom claim role='ADMIN' (owner) idWorkshop='${ID_WORKSHOP}' asignado a ${EMAIL}`);
 
   // 2) Doc de usuario en Firestore (la app carga userData desde aquí).
   //    El campo es `uid` (igual que en la base real), NO `id`.
@@ -140,6 +146,14 @@ async function main() {
     { merge: true },
   );
   console.log(`✅ Firestore workshops/${ID_WORKSHOP}`);
+
+  // 3b) Segundo taller AJENO (para el test de aislamiento). Existe y es válido,
+  //     pero el admin de prueba NO pertenece a él → debe recibir 403 al pedirlo.
+  await db.collection("workshops").doc(ID_WORKSHOP_B).set(
+    { id: ID_WORKSHOP_B, idWorkshop: ID_WORKSHOP_B, name: "Taller Ajeno (B)", isDeleted: false, createdAt: now, updatedAt: now },
+    { merge: true },
+  );
+  console.log(`✅ Firestore workshops/${ID_WORKSHOP_B} (taller ajeno, para aislamiento)`);
 
   // 4) Suscripción ACTIVA del taller (la app la pide al entrar; sin ella da 404).
   //    Se busca por el campo `idReference` = idWorkshop. trial_end muy futuro → no expira.
