@@ -215,6 +215,10 @@ test("jornada a entrega: diagnóstico y costeo por UI, ciclo completo hasta ENTR
   // EN ESPERA solo queda para OS aprobadas sin nada que pedir.
   expect(await statusOf(request, entryId)).toBe("REFACCIONES");
 
+  // Validador de recepción (Obs 29-jul #5/#6): marcar el abastecimiento listo
+  // antes de arrancar reparación (production/start lo exige si hay OC activa).
+  await put(request, `/entries/${entryId}`, { repairReadiness: "COMPLETO" });
+
   await post(request, `/entries/${entryId}/production/start`);
   await post(request, `/entries/${entryId}/production/finish`);
   expect(await statusOf(request, entryId)).toBe("CONTROL DE CALIDAD");

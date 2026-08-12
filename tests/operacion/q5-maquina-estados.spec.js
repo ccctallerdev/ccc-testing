@@ -116,6 +116,11 @@ test("Q5 API: aprobación→espera, compra→refacciones, producción→reparaci
   });
   expect(await statusOf(request, entryId)).toBe("REFACCIONES");
 
+  // Validador de recepción (Obs 29-jul #5/#6): con orden de compra activa hay que
+  // marcar el abastecimiento listo antes de arrancar reparación; si no,
+  // production/start lo rechaza (PROCUREMENT_NOT_READY).
+  await put(request, `/entries/${entryId}`, { repairReadiness: "COMPLETO" });
+
   // 3. Arrancar el cronómetro = el auto está en reparación.
   await post(request, `/entries/${entryId}/production/start`);
   expect(await statusOf(request, entryId)).toBe("EN REPARACION");
