@@ -22,6 +22,7 @@ const { authHeaders } = require("#apiToken");
  */
 
 const API = process.env.API || "http://localhost:3001/v1";
+const AGENDA_API = process.env.AGENDA_API || "http://localhost:3001/agenda";
 const ID_WORKSHOP = process.env.ID_WORKSHOP || "taller-prueba";
 const MECHANIC_ID = process.env.MECHANIC_ID || "mecanico-prueba";
 const ADMIN_EMAIL = process.env.SEED_EMAIL || "prueba@ccc.test";
@@ -208,7 +209,9 @@ test(
     // Eventos coloreados: azul (fc-promise-due) y rojo (fc-promise-overdue) con su OS.
     // Se comprueban en la vista Lista (la de Mes colapsa en "+N más" cuando hay
     // muchos eventos el mismo día; las clases/colores son los mismos).
-    await page.getByRole("button", { name: /^lista$/i }).click();
+    // El botón de la vista lista se llama "Agenda" (petición del cliente); se
+    // toma por su clase de FullCalendar para no confundirlo con el menú lateral.
+    await page.locator(".fc-listMonth-button").click();
     const evDue = page.locator(".fc-promise-due", { hasText: `OS ${due.os}` }).first();
     const evLate = page.locator(".fc-promise-overdue", { hasText: `OS ${late.os}` }).first();
     await expect(evDue, "evento azul del prometido de hoy").toBeVisible({ timeout: 20000 });
@@ -217,6 +220,111 @@ test(
     // Clic en una promesa → expediente de la OS (no es una cita editable).
     await evDue.click();
     await page.waitForURL(new RegExp(`/expediente/${due.entryId}`), { timeout: 15000 });
+  },
+);
+
+// ═══════════════════════════════ M1-b ══════════════════════════════════════
+test(
+  "M1-b: en la Agenda, '+N más' abre TODOS los eventos del día en un popover con scroll (como Google Calendar)",
+  { tag: ["@medianos", "@ui", "@lento"] },
+  async ({ page, request }) => {
+    test.setTimeout(180_000);
+    // Limpieza: borra las citas "Cita Popover …" de corridas anteriores para no
+    // llenar la agenda del emulador (y al final, las de esta corrida).
+    const cleanup = async () => {
+      const res = await request.get(`${AGENDA_API}/getevents?idw=${ID_WORKSHOP}`, { headers: await authHeaders() });
+      const events = res.ok() ? await res.json() : [];
+      for (const ev of Array.isArray(events) ? events : []) {
+        if (String(ev?.title ?? "").startsWith("Cita Popover ")) {
+          await request.delete(`${AGENDA_API}/delete`, { headers: await authHeaders(), data: { id: ev.id } });
+        }
+      }
+    };
+    await cleanup();
+    // Citas con horas distintas (06:00, 06:45, 07:30, …) en DOS días: hoy (14) y
+    // otro día del mismo mes (12) — mañana, o ayer si mañana ya cae en otro mes.
+    const marker = `Cita Popover ${String(Date.now()).slice(-6)}`;
+    const today = new Date();
+    today.setHours(6, 0, 0, 0);
+    const other = new Date(today);
+    other.setDate(other.getDate() + 1);
+    if (other.getMonth() !== today.getMonth()) other.setDate(today.getDate() - 1);
+    const addDay = async (base, n, tag) => {
+      for (let i = 0; i < n; i += 1) {
+        const start = new Date(base.getTime() + i * 45 * 60 * 1000);
+        const res = await request.post(`${AGENDA_API}/addevent`, {
+          headers: await authHeaders(),
+          data: {
+            idWorkshop: ID_WORKSHOP,
+            title: `${marker} ${tag} #${i + 1}`,
+            description: "prueba popover",
+            phone: "5512345678",
+            start,
+            end: new Date(start.getTime() + 30 * 60 * 1000),
+            allDay: false,
+            createdBy: "asesor-prueba",
+            createdByName: "Asesor Prueba",
+          },
+        });
+        expect(res.ok(), `alta de cita ${tag} #${i + 1}`).toBe(true);
+      }
+    };
+    const N = 14;
+    const N2 = 12;
+    await addDay(today, N, "HOY");
+    await addDay(other, N2, "OTRO");
+
+    await login(page);
+    await page.goto("/agenda");
+    const todayCell = page.locator(".fc-daygrid-day.fc-day-today");
+    await expect(todayCell).toBeVisible({ timeout: 20000 });
+    // La celda colapsa el exceso en "+N más".
+    const more = todayCell.locator(".fc-daygrid-more-link");
+    await expect(more, "enlace '+N más' en la celda de hoy").toBeVisible({ timeout: 20000 });
+    await expect(more).toContainText(/más/i);
+    await more.click();
+
+    // Popover con TODOS los eventos del día (primera y última cita creadas).
+    const pop = page.locator(".fc-more-popover");
+    await expect(pop).toBeVisible({ timeout: 10000 });
+    // Exacto: "#1" también está contenido en "#10"…"#14".
+    await expect(pop.getByText(`${marker} HOY #1`, { exact: true })).toBeVisible();
+    await expect(pop.getByText(`${marker} HOY #${N}`, { exact: true })).toBeVisible();
+    const count = await pop.locator(".fc-daygrid-event").filter({ hasText: `${marker} HOY` }).count();
+    expect(count, "todas las citas de HOY están en el popover").toBe(N);
+    // Encabezado del popover de HOY: azul principal con texto blanco.
+    await expect(pop).toHaveClass(/fc-day-today/);
+    const headerBg = await pop.locator(".fc-popover-header").evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(headerBg, "encabezado azul (#2563eb)").toBe("rgb(37, 99, 235)");
+
+    // Con tantos eventos, el cuerpo del popover hace scroll (no se sale de la pantalla).
+    const scrollable = await pop.locator(".fc-popover-body").evaluate((el) => el.scrollHeight > el.clientHeight + 4);
+    expect(scrollable, "el popover tiene scroll interno").toBe(true);
+
+    // PAUSA MANUAL: con PAUSA=1 el test se detiene aquí (popover abierto, 14 citas
+    // de hoy cargadas) y abre el Inspector de Playwright para que pruebes a mano
+    // (Mes / Semana / Agenda, scroll del popover, tarjetas). Al darle "Resume"
+    // en el Inspector el test sigue y borra sus citas de prueba.
+    //   PowerShell:  $env:PAUSA="1"; npx playwright test --project=direccion --grep "M1-b" --headed --timeout=0
+    //   Bash:        PAUSA=1 npx playwright test --project=direccion --grep "M1-b" --headed --timeout=0
+    if (process.env.PAUSA) await page.pause();
+
+    // Se cierra con la X.
+    await pop.locator(".fc-popover-close").click();
+    await expect(pop).toHaveCount(0);
+
+    // El OTRO día también colapsa y su popover trae sus 12 (y NO lleva el azul de hoy).
+    const otherKey = `${other.getFullYear()}-${String(other.getMonth() + 1).padStart(2, "0")}-${String(other.getDate()).padStart(2, "0")}`;
+    const otherCell = page.locator(`.fc-daygrid-day[data-date="${otherKey}"]`);
+    await otherCell.locator(".fc-daygrid-more-link").click();
+    const pop2 = page.locator(".fc-more-popover");
+    await expect(pop2).toBeVisible({ timeout: 10000 });
+    const count2 = await pop2.locator(".fc-daygrid-event").filter({ hasText: `${marker} OTRO` }).count();
+    expect(count2, "todas las citas del OTRO día están en su popover").toBe(N2);
+    await expect(pop2).not.toHaveClass(/fc-day-today/);
+    await pop2.locator(".fc-popover-close").click();
+
+    await cleanup();
   },
 );
 
