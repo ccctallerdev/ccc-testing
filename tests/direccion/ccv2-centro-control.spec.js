@@ -43,7 +43,7 @@ async function makePromisedOs(request, tag, { advance = 400, total = 1000 } = {}
   const client = await post(request, "/clients", {
     fullName: `Cliente CC ${tag} ${s}`,
     email: `cc.${tag}.${s}@test.com`,
-    phone: `85${s.slice(-8)}`,
+    phone: `85${s.slice(-8)}0000000000`.slice(0, 10),
     createdBy: MECHANIC,
   });
   const car = await post(request, "/cars", {

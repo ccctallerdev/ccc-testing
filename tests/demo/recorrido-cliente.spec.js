@@ -72,7 +72,7 @@ async function crearOsBase(request, { tag, plates, model }) {
   const client = await call(request, "post", "/clients", {
     fullName,
     email: `demo.${tag}.${s}@test.com`,
-    phone: `55${s}`,
+    phone: `55${s}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC_ID,
   });

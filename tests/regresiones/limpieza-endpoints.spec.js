@@ -41,7 +41,7 @@ test.describe.serial("Regresión — la limpieza no rompió endpoints", () => {
     const s = String(Date.now()).slice(-6);
 
     const created = await api(request, t, "post", "/workshops", {
-      name: `Reg ${s}`, email: `reg.${s}@ccc.test`, address: "Calle 123", phone: `55501${s}`,
+      name: `Reg ${s}`, email: `reg.${s}@ccc.test`, address: "Calle 123", phone: `55501${s}0000000000`.slice(0, 10),
     });
     expect(created.status, `crear taller → ${JSON.stringify(created.data)}`).toBeLessThan(300);
     const wid = created.data.id;

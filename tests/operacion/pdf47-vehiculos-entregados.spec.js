@@ -89,7 +89,7 @@ async function deliverNewOs(request, tag, { approve = true } = {}) {
   const client = (await post(request, "/clients", {
     fullName,
     email: `pdf47.${tag}.${s}@test.com`,
-    phone: `57${s}`,
+    phone: `57${s}0000000000`.slice(0, 10),
     idWorkshop,
     createdBy: MECHANIC_ID,
   })).data;

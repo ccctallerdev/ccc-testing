@@ -40,7 +40,7 @@ async function makeCarWithClient(request, tag) {
   const client = (await post(request, "/clients", {
     fullName: `Cliente Q11 ${tag} ${s}`,
     email: `q11.${tag}.${s}@test.com`,
-    phone: `57${s}`,
+    phone: `57${s}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC,
   })).data;

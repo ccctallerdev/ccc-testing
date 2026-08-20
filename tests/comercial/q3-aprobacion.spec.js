@@ -81,7 +81,7 @@ async function createOsFixture(request, quotes) {
   const client = await post(request, "/clients", {
     fullName: `Cliente Q3 ${suffix}`,
     email: `q3.${suffix}@test.com`,
-    phone: `55${suffix}`,
+    phone: `55${suffix}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC_ID,
   });

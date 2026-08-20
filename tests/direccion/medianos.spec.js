@@ -51,7 +51,7 @@ async function makeClientCar(request, s, tag) {
   const client = await post(request, "/clients", {
     fullName: `Cliente ${tag} ${s}`,
     email: `${tag.toLowerCase()}.${s}@test.com`,
-    phone: `55${s}`,
+    phone: `55${s}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC_ID,
   });
@@ -140,7 +140,7 @@ async function makeSupplier(request, s, tag) {
     idWorkshop: ID_WORKSHOP,
     name: `Refaccionaria ${tag} ${s}`,
     contactName: tag,
-    phone: `54${s}`,
+    phone: `54${s}0000000000`.slice(0, 10),
     email: `${tag.toLowerCase()}.${s}@prov.test`,
   });
   return { supplierId: idOf(supplier), supplierName: `Refaccionaria ${tag} ${s}` };

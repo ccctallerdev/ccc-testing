@@ -54,13 +54,13 @@ async function makeDeliveredOsWithReceivedPart(request) {
     idWorkshop: ID_WORKSHOP,
     name: supplierName,
     contactName: "M5",
-    phone: `54${s}`,
+    phone: `54${s}0000000000`.slice(0, 10),
     email: `m5.${s}@prov.test`,
   });
   const client = await post(request, "/clients", {
     fullName: `Cliente M5 ${s}`,
     email: `m5.${s}@test.com`,
-    phone: `53${s}`,
+    phone: `53${s}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC_ID,
   });

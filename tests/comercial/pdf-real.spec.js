@@ -36,7 +36,7 @@ async function makeApprovedOs(request) {
   const client = await post(request, "/clients", {
     fullName: `Cliente PDF ${s}`,
     email: `pdf.${s}@test.com`,
-    phone: `61${s}`,
+    phone: `61${s}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC,
   });

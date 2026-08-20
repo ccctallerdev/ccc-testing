@@ -40,7 +40,7 @@ async function makeOsWithQuote(request, tag) {
   const client = (await post(request, "/clients", {
     fullName: `Cliente Q31 ${tag} ${s}`,
     email: `q31.${tag}.${s}@test.com`,
-    phone: `83${s.slice(-8)}`,
+    phone: `83${s.slice(-8)}0000000000`.slice(0, 10),
     createdBy: MECHANIC,
   })).data;
   const car = (await post(request, "/cars", {

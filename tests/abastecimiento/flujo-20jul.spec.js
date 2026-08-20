@@ -43,7 +43,7 @@ async function makeOs(request) {
   const client = (await post(request, "/clients", {
     fullName: `Cliente 20Jul ${s}`,
     email: `f20.${s}@test.com`,
-    phone: `84${s.slice(-8)}`,
+    phone: `84${s.slice(-8)}0000000000`.slice(0, 10),
     createdBy: MECHANIC,
   })).data;
   const car = (await post(request, "/cars", {

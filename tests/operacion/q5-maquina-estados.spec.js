@@ -42,7 +42,7 @@ async function osReadyToApprove(request, tag) {
   const client = await post(request, "/clients", {
     fullName: `Cliente Q5 ${tag} ${s}`,
     email: `q5.${tag}.${s}@test.com`,
-    phone: `56${s}`,
+    phone: `56${s}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC,
   });

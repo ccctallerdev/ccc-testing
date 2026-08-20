@@ -40,7 +40,7 @@ async function createOs(request, tag) {
   const client = await post(request, "/clients", {
     fullName: `Cliente Q15 ${tag} ${suffix}`,
     email: `q15.${tag}.${suffix}@test.com`,
-    phone: `53${suffix}`,
+    phone: `53${suffix}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC_ID,
   });

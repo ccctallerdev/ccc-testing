@@ -41,7 +41,7 @@ async function makeBareOs(request, tag) {
   const client = (await post(request, "/clients", {
     fullName: `Cliente JE ${tag} ${s}`,
     email: `je.${tag}.${s}@test.com`,
-    phone: `58${s}`,
+    phone: `58${s}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC,
   })).data;

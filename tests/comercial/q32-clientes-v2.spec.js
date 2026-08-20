@@ -40,7 +40,7 @@ test("Q32 API: POST /clients crea SOLO el cliente (sin cuenta) y el duplicado re
   const created = await post(request, "/clients", {
     fullName: `Cliente Solo ${s}`,
     email,
-    phone: `71${s.slice(-8)}`,
+    phone: `71${s.slice(-8)}0000000000`.slice(0, 10),
     createdBy: "test",
   });
   expect(created.status).toBe(201);
@@ -57,7 +57,7 @@ test("Q32 API: POST /clients crea SOLO el cliente (sin cuenta) y el duplicado re
   const dup = await post(
     request,
     "/clients",
-    { fullName: "Otro", email, phone: `72${s.slice(-8)}`, createdBy: "test" },
+    { fullName: "Otro", email, phone: `72${s.slice(-8)}0000000000`.slice(0, 10), createdBy: "test" },
     { allowFail: true },
   );
   expect(dup.status).toBe(409);
@@ -119,7 +119,7 @@ test("Q32 API: /public/signup crea SOLO la cuenta (sin cliente) y valida contras
   const weak = await post(
     request,
     "/public/signup",
-    { name: "Cuenta", email, phone: `74${s.slice(-8)}`, password: "corta" },
+    { name: "Cuenta", email, phone: `74${s.slice(-8)}0000000000`.slice(0, 10), password: "corta" },
     { allowFail: true },
   );
   expect(weak.status).toBe(422);
@@ -128,7 +128,7 @@ test("Q32 API: /public/signup crea SOLO la cuenta (sin cliente) y valida contras
     name: "Cuenta",
     firstSurname: "App",
     email,
-    phone: `74${s.slice(-8)}`,
+    phone: `74${s.slice(-8)}0000000000`.slice(0, 10),
     password: "Segura_12345",
   });
   expect(ok.status).toBe(201);
@@ -145,7 +145,7 @@ test("Q32 API: /public/signup crea SOLO la cuenta (sin cliente) y valida contras
   const dup = await post(
     request,
     "/public/signup",
-    { name: "Cuenta", email, phone: `75${s.slice(-8)}`, password: "Segura_12345" },
+    { name: "Cuenta", email, phone: `75${s.slice(-8)}0000000000`.slice(0, 10), password: "Segura_12345" },
     { allowFail: true },
   );
   expect(dup.status).toBeGreaterThanOrEqual(400);

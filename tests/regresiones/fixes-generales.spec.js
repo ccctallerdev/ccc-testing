@@ -60,7 +60,7 @@ async function createOsWithQuote(request) {
     await post(request, `${API}/clients`, {
       fullName: `Cliente FG ${suffix}`,
       email: `fg.${suffix}@test.com`,
-      phone: `58${suffix}`,
+      phone: `58${suffix}0000000000`.slice(0, 10),
       idWorkshop: ID_WORKSHOP,
       createdBy: MECHANIC_ID,
     }),

@@ -46,7 +46,7 @@ async function approvedOsFor(request, mechanicId, tag) {
   const client = await post(request, "/clients", {
     fullName: `Cliente PM ${tag} ${s}`,
     email: `pm.${tag}.${s}@test.com`,
-    phone: `54${s}`,
+    phone: `54${s}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: mechanicId,
   });
@@ -121,7 +121,7 @@ test("producción por mecánico: cada quien ve solo lo suyo; el admin ve todo", 
     password: MECH_B_PASSWORD,
     rol: "MECANICO",
     country: "México",
-    phone: `55${suffix}9`,
+    phone: `55${suffix}90000000000`.slice(0, 10),
     // El backend exige photoURL válida al crear el usuario.
     photoURL: "https://firebasestorage.googleapis.com/v0/b/placeholder/o/user.png?alt=media",
   });

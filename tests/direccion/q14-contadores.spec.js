@@ -45,7 +45,7 @@ async function makeApprovedOs(request, tag, { withDiagnostic = true } = {}) {
   const client = await post(request, "/clients", {
     fullName: `Cliente Q14 ${tag} ${s}`,
     email: `q14.${tag}.${s}@test.com`,
-    phone: `59${s}`,
+    phone: `59${s}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC,
   });

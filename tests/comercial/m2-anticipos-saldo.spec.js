@@ -49,7 +49,7 @@ async function makeApprovedOsWithAdvances(request) {
   const client = await post(request, "/clients", {
     fullName: `Cliente M2 ${s}`,
     email: `m2.${s}@test.com`,
-    phone: `55${s}`,
+    phone: `55${s}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC_ID,
   });

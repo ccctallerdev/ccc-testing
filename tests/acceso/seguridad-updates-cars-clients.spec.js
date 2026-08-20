@@ -78,7 +78,7 @@ test.describe.serial("Seguridad — mass-assignment en update (cars / clients)",
     const created = await api(request, token, "post", "/clients", {
       fullName: "Cliente Seg",
       email: `seg.${u}@ccc.test`,
-      phone: `555${u}`.slice(0, 12),
+      phone: `555${u}`.slice(0, 10),
       idWorkshop: ID_WORKSHOP,
       createdBy: "test",
     });

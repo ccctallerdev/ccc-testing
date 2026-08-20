@@ -42,7 +42,7 @@ async function makeDeliveredOs(request, tag) {
   const client = await post(request, "/clients", {
     fullName: `Cliente G ${tag} ${s}`,
     email: `g.${tag}.${s}@test.com`,
-    phone: `62${s}`,
+    phone: `62${s}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC,
   });

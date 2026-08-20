@@ -65,7 +65,7 @@ test("ciclo completo: cliente → OS → cotización → aprobar → abastecer �
   const client = await post(request, "/clients", {
     fullName: `Cliente Ciclo ${suffix}`,
     email: `ciclo.${suffix}@test.com`,
-    phone: `59${suffix}`,
+    phone: `59${suffix}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC_ID,
   });

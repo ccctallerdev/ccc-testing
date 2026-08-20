@@ -79,7 +79,7 @@ async function createApprovedOs(request, inventoryId, count) {
   const client = await post(request, "/clients", {
     fullName: `Cliente Q2 ${suffix}`,
     email: `q2.${suffix}@test.com`,
-    phone: `56${suffix}`,
+    phone: `56${suffix}0000000000`.slice(0, 10),
     idWorkshop: ID_WORKSHOP,
     createdBy: MECHANIC_ID,
   });
