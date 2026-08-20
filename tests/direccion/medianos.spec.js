@@ -22,7 +22,7 @@ const { authHeaders } = require("#apiToken");
  */
 
 const API = process.env.API || "http://localhost:3001/v1";
-const AGENDA_API = process.env.AGENDA_API || "http://localhost:3001/agenda";
+const AGENDA_API = process.env.AGENDA_API || "http://localhost:3001/v1/agenda"; // M9: agenda dentro de /v1
 const ID_WORKSHOP = process.env.ID_WORKSHOP || "taller-prueba";
 const MECHANIC_ID = process.env.MECHANIC_ID || "mecanico-prueba";
 const ADMIN_EMAIL = process.env.SEED_EMAIL || "prueba@ccc.test";
@@ -232,11 +232,12 @@ test(
     // Limpieza: borra las citas "Cita Popover …" de corridas anteriores para no
     // llenar la agenda del emulador (y al final, las de esta corrida).
     const cleanup = async () => {
-      const res = await request.get(`${AGENDA_API}/getevents?idw=${ID_WORKSHOP}`, { headers: await authHeaders() });
-      const events = res.ok() ? await res.json() : [];
+      const res = await request.get(`${AGENDA_API}?idWorkshop=${ID_WORKSHOP}`, { headers: await authHeaders() });
+      const json = res.ok() ? await res.json().catch(() => null) : null;
+      const events = json?.data?.events ?? [];
       for (const ev of Array.isArray(events) ? events : []) {
         if (String(ev?.title ?? "").startsWith("Cita Popover ")) {
-          await request.delete(`${AGENDA_API}/delete`, { headers: await authHeaders(), data: { id: ev.id } });
+          await request.delete(`${AGENDA_API}/${ev.id}`, { headers: await authHeaders() });
         }
       }
     };
@@ -252,7 +253,7 @@ test(
     const addDay = async (base, n, tag) => {
       for (let i = 0; i < n; i += 1) {
         const start = new Date(base.getTime() + i * 45 * 60 * 1000);
-        const res = await request.post(`${AGENDA_API}/addevent`, {
+        const res = await request.post(AGENDA_API, {
           headers: await authHeaders(),
           data: {
             idWorkshop: ID_WORKSHOP,

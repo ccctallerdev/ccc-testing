@@ -16,7 +16,7 @@ const { authHeaders } = require("#apiToken");
  */
 
 const API = process.env.API || "http://localhost:3001/v1";
-const AGENDA_API = process.env.AGENDA_API || "http://localhost:3001/agenda";
+const AGENDA_API = process.env.AGENDA_API || "http://localhost:3001/v1/agenda"; // M9: agenda dentro de /v1
 const ID_WORKSHOP = process.env.ID_WORKSHOP || "taller-prueba";
 const MECHANIC_ID = process.env.MECHANIC_ID || "mecanico-prueba";
 const EMAIL = process.env.SEED_EMAIL || "prueba@ccc.test";
@@ -125,7 +125,7 @@ test("#3: la cita de agenda persiste createdBy/createdByName del asesor", { tag:
   request,
 }) => {
   const marker = `Cita Q3-10 ${Date.now()}`;
-  await post(request, `${AGENDA_API}/addevent`, {
+  await post(request, AGENDA_API, {
     idWorkshop: ID_WORKSHOP,
     title: marker,
     description: "test",
@@ -137,10 +137,8 @@ test("#3: la cita de agenda persiste createdBy/createdByName del asesor", { tag:
     createdByName: "Asesor Prueba",
   });
 
-  const events = await getJson(
-    request,
-    `${AGENDA_API}/getevents?idw=${ID_WORKSHOP}`,
-  );
+  const raw = await getJson(request, `${AGENDA_API}?idWorkshop=${ID_WORKSHOP}`);
+  const events = dataOf(raw)?.events ?? [];
   const created = (Array.isArray(events) ? events : []).find(
     (e) => e.title === marker,
   );
