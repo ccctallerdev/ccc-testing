@@ -137,9 +137,16 @@ test("Q32 API: /public/signup crea SOLO la cuenta (sin cliente) y valida contras
   // La cuenta existe…
   const user = await getJson(request, `/users/email/${encodeURIComponent(email)}`);
   expect(user.status).toBe(200);
-  // …pero NO se creó ningún cliente.
+  // …pero NO se creó ningún cliente. (22-ago: lookup ahora también encuentra
+  // cuentas de la app sin expediente — por eso exists=true — pero clientId
+  // viene null: hay cuenta, no hay `clients`.)
   const look = (await getJson(request, `/clients/lookup?email=${encodeURIComponent(email)}`)).data;
-  expect(look.exists).toBe(false);
+  expect(look.exists).toBe(true);
+  expect(look.matchedBy).toBe("email");
+  expect(look.hasAccount).toBe(true);
+  expect(look.clientId).toBeNull();
+  const noClient = await getJson(request, `/clients/email/${encodeURIComponent(email)}`, { allowFail: true });
+  expect(noClient.status).toBe(404);
 
   // Email repetido → rechazado.
   const dup = await post(
