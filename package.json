@@ -15,6 +15,8 @@
     "test:direccion": "playwright test --project=direccion",
     "test:marketing": "playwright test --project=marketing",
     "test:regresiones": "playwright test --project=regresiones",
+    "test:obs16ago": "playwright test --project=obs16ago && npm --prefix ../ccc-app test -- session",
+    "test:demo": "playwright test --project=demo",
     "test:api": "playwright test --grep @api",
     "test:ui": "playwright test --grep @ui",
     "test:humo": "playwright test --grep @humo",

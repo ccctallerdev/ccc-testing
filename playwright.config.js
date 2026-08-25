@@ -25,6 +25,13 @@ const { defineConfig } = require("@playwright/test");
  *
  * ⚠️  Un spec suelto en tests/ (fuera de una carpeta de área) NO pertenece a
  *     ningún project y NO se ejecuta. global-setup avisa si encuentra alguno.
+ *
+ * ─── PROJECT "demo" (Demo Day) ───────────────────────────────────────────
+ * Recorridos para que un humano los vea correr, no para CI. Va más lento
+ * a propósito (slowMo entre acciones) y siempre graba video:
+ *      npm run test:demo
+ * Velocidad ajustable sin tocar el spec:
+ *      DEMO_SLOWMO=600 DEMO_PAUSE_MS=2000 npm run test:demo
  */
 const AREAS = [
   { name: "publico",        descripcion: "Sitio público del embudo — no requiere sesión ni semillas" },
@@ -35,6 +42,8 @@ const AREAS = [
   { name: "direccion",      descripcion: "Centro de Control, contadores y garantías" },
   { name: "marketing",      descripcion: "CMS del sitio público (Fase 2): contenido por página, media y volúmenes" },
   { name: "regresiones",    descripcion: "Fixes puntuales que no tienen casa propia" },
+  { name: "obs16ago",       descripcion: "Correcciones del 25-ago a las observaciones del cliente del 16-ago (seguridad, diagnósticos, importación, Modelo Operativo, Abastecimiento)" },
+  { name: "demo",           descripcion: "Recorridos guiados para mostrar la app EN VIVO (Demo Day). A propósito van lentos (slowMo) — no son regresión, no correr en CI." },
 ];
 
 module.exports = defineConfig({
@@ -56,7 +65,20 @@ module.exports = defineConfig({
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
-  projects: AREAS.map(({ name }) => ({ name, testDir: `./tests/${name}` })),
+  projects: AREAS.map(({ name }) =>
+    name === "demo"
+      ? {
+          name,
+          testDir: `./tests/${name}`,
+          use: {
+            // Demo Day: se ve más lento a propósito y siempre queda grabado
+            // (por si algo falla en vivo, se puede reproducir el video).
+            video: "on",
+            launchOptions: { slowMo: Number(process.env.DEMO_SLOWMO) || 400 },
+          },
+        }
+      : { name, testDir: `./tests/${name}` },
+  ),
 });
 
 module.exports.AREAS = AREAS;
