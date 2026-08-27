@@ -945,19 +945,21 @@ test(
       // boton no falla: sale un toast "Información incompleta o valores
       // invalidos" y no se guarda nada. La mano de obra llega del costeo con
       // count=1 y cost="", asi que hay que ponerle horas y precio.
-      // ⚠️ WORKAROUND — punto 15 del BACKLOG_TECNICO.
-      // Al Asesor le llega el "Precio unitario" de la refaccion VACIO: el campo
-      // se llama `cost` y `SENSITIVE_FIELDS` lo trata como costo de proveedor
-      // (CAN_VIEW_SUPPLIER_COST), aunque en una cotizacion sea el precio AL
-      // CLIENTE. El subtotal si pasa (CAN_VIEW_SELL_PRICE), asi que el renglon
-      // muestra $1,700.00 sin el 850 que lo produce, y no deja guardar.
-      // Se recaptura para que la corrida siga. Cuando se arregle el punto 15,
-      // esto se cambia por una comprobacion de que el 850 YA venia.
+      // ✅ ARREGLADO — punto 15 del BACKLOG_TECNICO / obs 19-20 de Roberto.
+      // Aqui habia un WORKAROUND: al Asesor le llegaba el "Precio unitario"
+      // VACIO porque el campo se llamaba `cost` y `SENSITIVE_FIELDS` lo trataba
+      // como costo de proveedor, aunque en una cotizacion sea el precio AL
+      // CLIENTE. Habia que recapturar el 850 para que la corrida siguiera.
+      // Ahora el precio al cliente se llama `unitPrice` (CAN_VIEW_SELL_PRICE),
+      // asi que al Asesor SI le llega: en vez de recapturarlo, se comprueba.
       const filaRefaccion = page
         .locator("div.grid")
         .filter({ has: page.getByPlaceholder(/Ej\. Filtro de aceite OEM/i) })
         .last();
-      await filaRefaccion.locator("input").nth(2).fill("850");
+      await expect(
+        filaRefaccion.locator("input").nth(2),
+        "punto 15: el Asesor debe recibir el precio al cliente ya capturado en el Costeo",
+      ).toHaveValue(/850/, { timeout: 15000 });
 
       const filaManoObra = page
         .locator("div.grid")
