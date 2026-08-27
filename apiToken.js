@@ -1,48 +1,72 @@
 /**
- * Token del admin de prueba para la API blindada (Q20).
+ * Token del usuario de pruebas para la API blindada (Q20).
  *
- * Desde feat/roles-setup, TODO /v1 (salvo /public) exige un ID token de
- * Firebase con el custom claim `role` firmado. Este módulo inicia sesión
- * contra el EMULADOR de Auth por REST y cachea el token ~45 min (expira
- * a la hora), para que specs y seeds se identifiquen igual que la app.
+ * TODO /v1 (salvo /public) exige un ID token de Firebase con el custom claim
+ * `role` firmado. Este módulo inicia sesión y cachea el token ~45 min, para
+ * que specs y seeds se identifiquen igual que la app.
+ *
+ * ── CONTRA QUÉ FIREBASE (26-ago) ──────────────────────────────────────────
+ * Antes hablaba SIEMPRE con el emulador, y por eso los ~38 specs de UI no se
+ * podían correr contra refac. Ahora decide solo:
+ *
+ *   · `API` apunta a localhost/127.0.0.1  →  EMULADOR (comportamiento de
+ *     siempre; correr en local no cambia en nada).
+ *   · `API` apunta a cualquier otra cosa  →  FIREBASE REAL, con la API key
+ *     web (ver qaAuth.js: la toma de FIREBASE_API_KEY o del .env de
+ *     ccc-frontend).
+ *
+ * Se puede forzar cualquiera de los dos: AUTH_EMU="http://127.0.0.1:9099"
+ * fuerza el emulador, AUTH_REAL=1 fuerza el Firebase real.
+ *
+ * Para correr un spec de UI contra refac:
+ *   $env:BASE_URL="https://ccc-frontend-qa.vercel.app"
+ *   $env:API="https://v1-hirpfgw7sa-uc.a.run.app/v1"
+ *   $env:SEED_EMAIL="rsv.cup@gmail.com"; $env:SEED_PASSWORD="admin123"
+ *   $env:SKIP_SEED="1"
+ *   npm run test:comercial     (o el área que quieras)
+ *
+ * OJO: que la autenticación funcione no garantiza que el spec pase. Varios
+ * asumen datos de la semilla local (`taller-prueba`, placas concretas, etc.);
+ * esos hay que ajustarlos o correrlos solo en local.
  *
  * Lo usan:
  *   - los specs → require("#apiToken")   ← alias nativo de Node, declarado en
- *     el campo "imports" de package.json. Resuelve desde cualquier nivel de
- *     carpeta, así que reorganizar tests/ ya no rompe las rutas.
+ *     el campo "imports" de package.json.
  *   - los seed_*.js → require("./apiToken")
  *
- * Requiere Node 18+ (fetch global) y la seed del usuario admin corrida
- * (global-setup lo hace solo).
+ * Requiere Node 18+ (fetch global).
  */
 
-const AUTH_EMU = process.env.AUTH_EMU || "http://127.0.0.1:9099";
+const { signIn } = require("./qaAuth");
+
+const API = process.env.API || "http://localhost:3001/v1";
 const EMAIL = process.env.SEED_EMAIL || "prueba@ccc.test";
 const PASSWORD = process.env.SEED_PASSWORD || "prueba123";
 
-let cached = null;
-let cachedAt = 0;
+const apiEsLocal = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(API);
+const usarEmulador =
+  process.env.AUTH_REAL === "1" ? false : Boolean(process.env.AUTH_EMU) || apiEsLocal;
 
-/** idToken del admin semilla (claim role=ADMIN → owner). Cacheado. */
+// qaAuth decide por AUTH_EMU; si toca emulador y nadie lo definió, lo ponemos
+// nosotros con el default de siempre para no cambiar el comportamiento local.
+if (usarEmulador && !process.env.AUTH_EMU) {
+  process.env.AUTH_EMU = "http://127.0.0.1:9099";
+}
+if (!usarEmulador && process.env.AUTH_REAL === "1") {
+  delete process.env.AUTH_EMU;
+}
+
+/** idToken del usuario de pruebas (claim role=ADMIN → owner). Cacheado. */
 async function getApiToken() {
-  if (cached && Date.now() - cachedAt < 45 * 60 * 1000) return cached;
-  const res = await fetch(
-    `${AUTH_EMU}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=fake`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: EMAIL, password: PASSWORD, returnSecureToken: true }),
-    },
-  );
-  if (!res.ok) {
-    throw new Error(
-      `No se pudo obtener el token del emulador de Auth (${res.status}): ${await res.text()}\n` +
-        "¿Están arriba los emuladores y corriste node seed_emulator_user.js?",
-    );
+  try {
+    return await signIn(EMAIL, PASSWORD);
+  } catch (err) {
+    const donde = usarEmulador ? "el emulador de Auth" : "Firebase";
+    const pista = usarEmulador
+      ? "¿Están arriba los emuladores y corriste node seed_emulator_user.js?"
+      : `¿Existe ${EMAIL} en el proyecto y la contraseña es la correcta?`;
+    throw new Error(`No se pudo obtener el token de ${donde}: ${err.message}\n${pista}`);
   }
-  cached = (await res.json()).idToken;
-  cachedAt = Date.now();
-  return cached;
 }
 
 /** Headers listos para anexar a cualquier llamada a la API. */

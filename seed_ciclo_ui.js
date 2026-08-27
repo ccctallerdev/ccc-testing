@@ -54,7 +54,7 @@ async function baseOs(tag, { withDiagnostic = true, asesor = ASESORES[0] } = {})
   const client = await post("/clients", {
     fullName: `Ciclo ${tag} ${suffix}`,
     email: `ciclo.${tag.toLowerCase()}.${suffix}@test.com`,
-    phone: `51${suffix}${phoneSeq++}`,
+    phone: `511${suffix}${phoneSeq++}`, // 10 dígitos exactos (schema)
     idWorkshop: ID_WORKSHOP,
     createdBy: asesor.id,
   });

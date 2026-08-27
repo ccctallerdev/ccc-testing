@@ -34,16 +34,18 @@ const { defineConfig } = require("@playwright/test");
  *      DEMO_SLOWMO=600 DEMO_PAUSE_MS=2000 npm run test:demo
  */
 const AREAS = [
-  { name: "publico",        descripcion: "Sitio público del embudo — no requiere sesión ni semillas" },
-  { name: "acceso",         descripcion: "Login, roles y permisos, configuración" },
-  { name: "operacion",      descripcion: "El ciclo del taller: recepción → diagnóstico → producción → entrega" },
-  { name: "comercial",      descripcion: "Clientes, cotización, aprobación y documentos" },
-  { name: "abastecimiento", descripcion: "Compras, recepción de refacciones e inventario" },
-  { name: "direccion",      descripcion: "Centro de Control, contadores y garantías" },
-  { name: "marketing",      descripcion: "CMS del sitio público (Fase 2): contenido por página, media y volúmenes" },
-  { name: "regresiones",    descripcion: "Fixes puntuales que no tienen casa propia" },
-  { name: "obs16ago",       descripcion: "Correcciones del 25-ago a las observaciones del cliente del 16-ago (seguridad, diagnósticos, importación, Modelo Operativo, Abastecimiento)" },
+  { name: "publico", legacy: true,        descripcion: "Sitio público del embudo — no requiere sesión ni semillas" },
+  { name: "acceso", legacy: true,         descripcion: "Login, roles y permisos, configuración" },
+  { name: "operacion", legacy: true,      descripcion: "El ciclo del taller: recepción → diagnóstico → producción → entrega" },
+  { name: "comercial", legacy: true,      descripcion: "Clientes, cotización, aprobación y documentos" },
+  { name: "abastecimiento", legacy: true, descripcion: "Compras, recepción de refacciones e inventario" },
+  { name: "direccion", legacy: true,      descripcion: "Centro de Control, contadores y garantías" },
+  { name: "marketing", legacy: true,      descripcion: "CMS del sitio público (Fase 2): contenido por página, media y volúmenes" },
+  { name: "regresiones", legacy: true,    descripcion: "Fixes puntuales que no tienen casa propia" },
+  { name: "obs16ago", legacy: true,       descripcion: "Correcciones del 25-ago a las observaciones del cliente del 16-ago (seguridad, diagnósticos, importación, Modelo Operativo, Abastecimiento)" },
   { name: "demo",           descripcion: "Recorridos guiados para mostrar la app EN VIVO (Demo Day). A propósito van lentos (slowMo) — no son regresión, no correr en CI." },
+  { name: "e2e_v2",         descripcion: "Recorrido completo POR INTERFAZ contra refac, sin un solo atajo por API: registro del taller (Stripe test) → equipo por rol → recepción → diagnóstico → cotización → aprobación del cliente en el celular → abastecimiento → reparación → entrega. Es el que sí detecta una regresión del front." },
+  { name: "qa",             descripcion: "Gemelos para refac (QA) de specs que en tests/ están atados a los emuladores. NO reemplazan al original: son copias con la autenticación y la siembra adaptadas a Firebase real. Requieren el serviceAccountKey de refac." },
 ];
 
 module.exports = defineConfig({
@@ -65,20 +67,31 @@ module.exports = defineConfig({
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
-  projects: AREAS.map(({ name }) =>
-    name === "demo"
-      ? {
-          name,
-          testDir: `./tests/${name}`,
-          use: {
-            // Demo Day: se ve más lento a propósito y siempre queda grabado
-            // (por si algo falla en vivo, se puede reproducir el video).
-            video: "on",
-            launchOptions: { slowMo: Number(process.env.DEMO_SLOWMO) || 400 },
-          },
-        }
-      : { name, testDir: `./tests/${name}` },
-  ),
+  projects: AREAS.map(({ name, legacy }) => {
+    // Los proyectos marcados `legacy` viven en tests/_legacy/ (ver el README
+    // de esa carpeta: se apoyan en atajos por API y pasan aunque la pantalla
+    // esté rota, así que no valen como red de seguridad).
+    const testDir = `./tests/${legacy ? "_legacy/" : ""}${name}`;
+
+    if (name === "demo") {
+      return {
+        name,
+        testDir,
+        use: {
+          // Demo Day: se ve más lento a propósito y siempre queda grabado
+          // (por si algo falla en vivo, se puede reproducir el video).
+          video: "on",
+          launchOptions: { slowMo: Number(process.env.DEMO_SLOWMO) || 400 },
+        },
+      };
+    }
+    if (name === "e2e_v2") {
+      // A velocidad alta: sin slowMo. Video solo de lo que falla, porque el
+      // recorrido completo es largo.
+      return { name, testDir, use: { video: "retain-on-failure" } };
+    }
+    return { name, testDir };
+  }),
 });
 
 module.exports.AREAS = AREAS;

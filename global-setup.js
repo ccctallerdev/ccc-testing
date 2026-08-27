@@ -11,9 +11,14 @@
  * Ambas semillas son idempotentes/aditivas: correr la suite varias veces
  * no rompe nada.
  *
- * Dos atajos que evitan fricción al correr por carpetas:
+ * Tres atajos que evitan fricción al correr por carpetas:
  *   · Si solo se pidió el proyecto `publico`, NO siembra: el sitio público es
  *     anónimo y no toca la base, así que basta el frontend en :3000.
+ *   · Si se exporta SKIP_SEED=1, NO siembra — para cuando `demo` corre contra
+ *     PRODUCCIÓN (BASE_URL/API apuntando a controlcentralcar.com) y no hay
+ *     emuladores locales levantados. Las semillas SIEMPRE apuntan a
+ *     127.0.0.1 así que nunca tocarían prod por sí solas, pero sin
+ *     emuladores arriba tronarían con ECONNREFUSED antes de llegar al test.
  *   · Avisa si hay specs sueltos en tests/, porque esos no pertenecen a
  *     ningún project y pasarían desapercibidos sin ejecutarse nunca.
  */
@@ -44,6 +49,10 @@ module.exports = async () => {
   });
   if (pedidos.length > 0 && pedidos.every((n) => n === "publico")) {
     console.log("\n🌱 Solo el sitio público: no hacen falta semillas.\n");
+    return;
+  }
+  if (process.env.SKIP_SEED === "1") {
+    console.log("\n🌱 SKIP_SEED=1: no se siembra (útil corriendo `demo` contra producción).\n");
     return;
   }
 

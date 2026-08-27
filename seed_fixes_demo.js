@@ -28,7 +28,7 @@ const { authHeaders } = require("./apiToken");
 const { getFirestore } = require("firebase-admin/firestore");
 
 const API = process.env.API || "http://localhost:3001/v1";
-const AGENDA_API = process.env.AGENDA_API || "http://localhost:3001/agenda";
+const AGENDA_API = process.env.AGENDA_API || "http://localhost:3001/v1/agenda"; // M9: agenda dentro de /v1
 const ID_WORKSHOP = process.env.ID_WORKSHOP || "taller-prueba";
 
 initializeApp({ projectId: "ccc-taller-refac" });
@@ -62,7 +62,7 @@ async function createOsFor(asesor, carModel, plates, withQuote) {
   const client = await post(API, "/clients", {
     fullName: `Cliente de ${asesor.name} ${suffix}`,
     email: `demo.${asesor.id}.${suffix}@test.com`,
-    phone: `55${suffix}${Math.floor(Math.random() * 90 + 10)}`,
+    phone: `551${suffix}${Math.floor(Math.random() * 90 + 10)}`, // 10 dígitos exactos (schema)
     idWorkshop: ID_WORKSHOP,
     createdBy: asesor.id,
   });
@@ -146,7 +146,7 @@ async function createEvent(asesor, daysFromNow, title) {
   const d = new Date();
   d.setDate(d.getDate() + daysFromNow);
   d.setHours(11, 0, 0, 0);
-  await post(AGENDA_API, "/addevent", {
+  await post(AGENDA_API, "", {
     idWorkshop: ID_WORKSHOP,
     title,
     description: "cita de demo",

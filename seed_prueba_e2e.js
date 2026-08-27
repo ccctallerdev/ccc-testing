@@ -62,7 +62,7 @@ async function main() {
     const client = await post("/clients", {
       fullName: `Cliente Prueba E2E ${suffix}`,
       email: `prueba.e2e.${suffix}@test.com`,
-      phone: `55${suffix}0000`, // único por corrida (evita choque por duplicado)
+      phone: `55${suffix}000`, // único por corrida, 10 dígitos exactos (schema)
       idWorkshop: ID_WORKSHOP,
       createdBy: CREATED_BY,
     });
