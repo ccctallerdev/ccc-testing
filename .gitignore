@@ -3,5 +3,7 @@ test-results/
 playwright-report/
 errors/
 scripts/registro-talleres-resultado.json
-scripts/debug/
-scripts/debug-e2e2/
+# Evidencia que dejan los specs al fallar (capturas + HTML de cada etapa).
+# Glob a propósito: cada spec nuevo estrena su carpeta y no hay que acordarse
+# de venir a agregarla aquí.
+scripts/debug*/
