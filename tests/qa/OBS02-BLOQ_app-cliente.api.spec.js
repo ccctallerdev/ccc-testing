@@ -181,6 +181,21 @@ test.describe("OBS02 · API del cliente y galería", () => {
     expect([401, 403], `la subida debió denegarse y respondió ${res.status}`).toContain(res.status);
   });
 
+  test("8) el costeo (borrador interno) NO se lista ni se sirve al cliente", async () => {
+    // Lista: ninguna "cotización" visible puede ser stage COSTEO.
+    const r = await apiGet(`/app/entries/${entry.id}/quotes`, token);
+    expect(r.status).toBe(200);
+    const etapas = (r.body?.data?.quotes || []).map((q) => q.stage);
+    expect(etapas.filter((e) => e === "COSTEO"), `stages visibles: ${etapas.join(", ") || "(vacío)"}`).toEqual([]);
+
+    // Detalle: un costeo por id responde 404, como si no existiera. El id se
+    // puede pasar por env; por omisión usa el costeo del taller demo de refac.
+    const costeoEntry = process.env.COSTEO_ENTRY_ID || "eqQZlOzXYGpBz1T22azt";
+    const costeoQuote = process.env.COSTEO_QUOTE_ID || "9pg5XmtxzuKHPgqJ6gKb";
+    const rd = await apiGet(`/app/entries/${costeoEntry}/quotes/${costeoQuote}`, token);
+    expect([403, 404], `el costeo respondió ${rd.status} — debió ser invisible`).toContain(rd.status);
+  });
+
   test("7) ownership · una OS ajena responde 403/404, no datos", async () => {
     const r = await apiGet(`/app/entries/OS-inexistente-de-otro`, token);
     expect([403, 404, 400], `respondió ${r.status}`).toContain(r.status);
