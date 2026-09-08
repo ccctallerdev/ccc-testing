@@ -73,10 +73,20 @@ const DUENO_PASSWORD = process.env.SEED_PASSWORD || "admin123";
 
 const EQUIPO_PASSWORD = process.env.EQUIPO_PASSWORD || "Demo1234";
 const TEL_BASE = process.env.TEL_BASE || "55119900";
+// ⚠️ TEL_BASE NO es un teléfono: es un PREFIJO de 8 dígitos al que se le pegan
+// 2 de sufijo (01, 02, ...) para dar los 10 EXACTOS que exige el backend
+// (OBS31-08: todo teléfono en base son 10 dígitos limpios). Guardas para que
+// un override mal puesto truene aquí y no se cuele a la base:
+if (!/^\d{8}$/.test(TEL_BASE)) {
+  throw new Error(`TEL_BASE debe ser un PREFIJO de exactamente 8 dígitos (se le agregan 2 de sufijo); llegó '${TEL_BASE}'. No pongas un teléfono completo aquí.`);
+}
 
 const CLIENTE_EMAIL = process.env.DEMO_CLIENT_EMAIL || "lusituti756+cliente2@gmail.com";
 const CLIENTE_NOMBRE = process.env.DEMO_CLIENT_NAME || "Patricia Gómez Vidal";
 const CLIENTE_TEL = process.env.DEMO_CLIENT_PHONE || "";
+if (CLIENTE_TEL && !/^\d{10}$/.test(CLIENTE_TEL)) {
+  throw new Error(`DEMO_CLIENT_PHONE debe traer 10 dígitos limpios (OBS31-08); llegó '${CLIENTE_TEL}'.`);
+}
 
 const SIN_PAUSA_MOVIL = process.env.SIN_PAUSA_MOVIL === "1";
 const APPROVE_TIMEOUT_MS = Number(process.env.DEMO_APPROVE_TIMEOUT_MS) || 10 * 60_000;
