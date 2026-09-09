@@ -56,7 +56,7 @@ const AUTO = {
 const MECANICO = process.env.MECANICO_NOMBRE || "Mecánico Prueba";
 
 const literal = (t) => String(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const creados = { uids: [] };
+const creados = { uids: [], entriesSinteticas: [] };
 let settingsPrevios = null;
 let techHeaders = null;
 
@@ -68,7 +68,14 @@ async function apiTech(request, method, path, body) {
   return { status: res.status(), body: await res.json().catch(() => null) };
 }
 
-/** Pone el taller EXACTAMENTE en su límite del mes (sin tolerancia previa). */
+/** Pone el taller EXACTAMENTE en su límite del mes (sin tolerancia previa).
+ *
+ * OJO (aprendido el 9-sep con emulador LIMPIO): el tope debe ser >= 4. Con
+ * 1 sola OS del mes el apoyo del 10 % (mínimo 1) deja al taller en 1/2 = 50 %,
+ * DEBAJO del aviso del 80 %, y el banner ámbar (correctamente) no se pinta —
+ * el spec fallaba por su propio escenario, no por el código. Con 4/5 = 80 %
+ * el banner queda en aviso, que es lo que el caso verifica. Se rellenan OS
+ * sintéticas si el mes no llega a 4 (y se limpian en afterAll). */
 async function tallerAlLimite() {
   const [inicio, fin] = (() => {
     const TZ = 6 * 60 * 60 * 1000;
@@ -82,10 +89,25 @@ async function tallerAlLimite() {
     .where("createdAt", ">=", inicio)
     .where("createdAt", "<", fin)
     .count().get();
-  const used = snap.data().count;
+  let used = snap.data().count;
+  const MINIMO = 4; // ver nota de arriba: 4/(4+1) = 80 % = umbral del aviso
+  while (used < MINIMO) {
+    const ref = await qaDb().collection("entries").add({
+      idWorkshop: ID_WORKSHOP,
+      isDeleted: false,
+      status: 1,
+      approvalState: "EN ESPERA",
+      observations: "OS sintética del spec de límite (relleno del tope)",
+      createdAt: Date.now(),
+      registerDate: Date.now(),
+      updatedAt: Date.now(),
+    });
+    creados.entriesSinteticas.push(ref.id);
+    used += 1;
+  }
   await qaDb().collection("order_usage").doc(ID_WORKSHOP).set({
     idWorkshop: ID_WORKSHOP,
-    limit_override: Math.max(1, used), // >=1 para que el 10% ofrezca al menos 1 OS
+    limit_override: used, // el taller queda EXACTAMENTE al tope
   }, { merge: false });
   return used;
 }
@@ -166,6 +188,9 @@ test.describe("Límite de órdenes por mes — pantallas @ui", () => {
       .then((u) => qaAuth().deleteUser(u.uid))
       .catch(() => {});
     for (const uid of creados.uids) await qaAuth().deleteUser(uid).catch(() => {});
+    for (const id of creados.entriesSinteticas) {
+      await qaDb().collection("entries").doc(id).delete().catch(() => {});
+    }
   });
 
   test("el Dueño ve el banner al límite, acepta el apoyo y el banner pasa a ámbar", async ({ page }) => {
