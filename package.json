@@ -22,6 +22,8 @@
     "test:demo:multirol": "playwright test --project=demo tests/demo/recorrido-multirol-qa.spec.js",
     "test:qa": "playwright test --project=qa",
     "test:e2e2": "playwright test --project=e2e_v2",
+    "test:e2e2:recorrido": "playwright test --project=e2e_v2 tests/e2e_v2/recorrido-ui-completo.spec.js",
+    "test:e2e2:trial21": "playwright test --project=e2e_v2 tests/e2e_v2/FEAT-TRIAL21_prueba-dos-etapas.ui.spec.js",
     "test:api": "playwright test --grep @api",
     "test:ui": "playwright test --grep @ui",
     "test:humo": "playwright test --grep @humo",
