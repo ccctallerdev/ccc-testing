@@ -21,9 +21,19 @@
  * Para correr un spec de UI contra refac:
  *   $env:BASE_URL="https://ccc-frontend-qa.vercel.app"
  *   $env:API="https://v1-hirpfgw7sa-uc.a.run.app/v1"
- *   $env:SEED_EMAIL="rsv.cup@gmail.com"; $env:SEED_PASSWORD="admin123"
+ *   $env:SEED_EMAIL='rsv_gpa@outlook.com'; $env:SEED_PASSWORD='admin123'
  *   $env:SKIP_SEED="1"
  *   npm run test:comercial     (o el área que quieras)
+ *
+ * ⚠️ SEED_EMAIL es PERSONAL DEL TALLER (Dueño/Admin), no un cliente de la app.
+ *   Son cuentas distintas: un correo puede existir como cliente y no servir
+ *   aquí. Vigentes en refac (14-sep): Dueño `rsv_gpa@outlook.com`, Mecánico
+ *   `rsv_gpa+mecanico1@outlook.com` — **@outlook, no @gmail**.
+ *   El ejemplo anterior (`rsv.cup@gmail.com` / `admin123`) quedó aquí meses
+ *   después de dejar de servir y costó tres corridas el 14-sep: esa cuenta es
+ *   el CLIENTE del recorrido e2e, no personal de taller.
+ *   ¿No sabes cuál usar? `node scripts/usuarios-del-taller.js <idWorkshop>`
+ *   los lista con su rol (solo lectura).
  *
  * OJO: que la autenticación funcione no garantiza que el spec pase. Varios
  * asumen datos de la semilla local (`taller-prueba`, placas concretas, etc.);
@@ -40,8 +50,14 @@
 const { signIn } = require("./qaAuth");
 
 const API = process.env.API || "http://localhost:3001/v1";
-const EMAIL = process.env.SEED_EMAIL || "prueba@ccc.test";
-const PASSWORD = process.env.SEED_PASSWORD || "prueba123";
+
+// Los defaults son los del EMULADOR: `seed_emulator_user.js` crea exactamente
+// esta cuenta. Contra refac no existen, y ese es el punto del aviso de abajo.
+const EMAIL_EMULADOR = "prueba@ccc.test";
+const PASSWORD_EMULADOR = "prueba123";
+const EMAIL = process.env.SEED_EMAIL || EMAIL_EMULADOR;
+const PASSWORD = process.env.SEED_PASSWORD || PASSWORD_EMULADOR;
+const SIN_CREDENCIALES = !process.env.SEED_EMAIL && !process.env.SEED_PASSWORD;
 
 const apiEsLocal = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(API);
 const usarEmulador =
@@ -62,9 +78,34 @@ async function getApiToken() {
     return await signIn(EMAIL, PASSWORD);
   } catch (err) {
     const donde = usarEmulador ? "el emulador de Auth" : "Firebase";
-    const pista = usarEmulador
-      ? "¿Están arriba los emuladores y corriste node seed_emulator_user.js?"
-      : `¿Existe ${EMAIL} en el proyecto y la contraseña es la correcta?`;
+    // Tres causas muy distintas, y antes las tres decían lo mismo. La de en
+    // medio es la que costaba caro: sin SEED_EMAIL el intento se hace con la
+    // cuenta del EMULADOR contra Firebase real, y el INVALID_LOGIN_CREDENTIALS
+    // resultante se lee como "la prueba está rota" en vez de "falta configurar".
+    let pista;
+    if (usarEmulador) {
+      pista = "¿Están arriba los emuladores y corriste node seed_emulator_user.js?";
+    } else if (SIN_CREDENCIALES) {
+      pista =
+        `NO definiste SEED_EMAIL / SEED_PASSWORD, así que se intentó con la cuenta del
+` +
+        `EMULADOR (${EMAIL_EMULADOR}), que en Firebase real NO existe.
+` +
+        `Define una cuenta de PERSONAL del taller (Dueño o Admin), no de cliente:
+` +
+        `  $env:SEED_EMAIL='rsv_gpa@outlook.com'; $env:SEED_PASSWORD='...'
+` +
+        `Si no sabes cuál va: node scripts/usuarios-del-taller.js <idWorkshop>`;
+    } else {
+      pista =
+        `¿Existe ${EMAIL} en el proyecto y la contraseña es la correcta?
+` +
+        `Recuerda que SEED_EMAIL es PERSONAL del taller (Dueño/Admin): una cuenta de
+` +
+        `CLIENTE de la app existe pero no autentica aquí.
+` +
+        `Para ver los del taller: node scripts/usuarios-del-taller.js <idWorkshop>`;
+    }
     throw new Error(`No se pudo obtener el token de ${donde}: ${err.message}\n${pista}`);
   }
 }
