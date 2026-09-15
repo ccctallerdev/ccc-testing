@@ -175,11 +175,12 @@ test.describe("BL-20 — la pantalla da salida cuando el correo no está confirm
     await expect(page.getByRole("alert")).toContainText(/sigue vigente tu correo actual/i);
   });
 
-  test("4) durante la prueba es un AVISO, no un muro", async ({ page }) => {
-    // El acceso no se corta por esto (decisión de Enrique, 2-sep): la pantalla
-    // informa y deja seguir. Si esto se volviera un `role="alert"` bloqueante,
-    // seríamos otro producto.
-    await page.route(/\/billing\/status\//, async (route) => {
+  /**
+   * Intercepta /billing/status y le mete el aviso, conservando el resto de la
+   * respuesta real. Se usa en los dos casos de aviso.
+   */
+  const conAvisoDeCorreo = (page) =>
+    page.route(/\/billing\/status\//, async (route) => {
       const res = await route.fetch();
       const json = await res.json().catch(() => null);
       if (!json?.data) return route.fulfill({ response: res });
@@ -191,6 +192,12 @@ test.describe("BL-20 — la pantalla da salida cuando el correo no está confirm
         body: JSON.stringify(json),
       });
     });
+
+  test("4) durante la prueba es un AVISO, no un muro", async ({ page }) => {
+    // El acceso no se corta por esto (decisión de Enrique, 2-sep): la pantalla
+    // informa y deja seguir. Si esto se volviera un `role="alert"` bloqueante,
+    // seríamos otro producto.
+    await conAvisoDeCorreo(page);
 
     await entrarComo(page, DUENO);
     await page.goto("/suscripcion");
@@ -205,5 +212,24 @@ test.describe("BL-20 — la pantalla da salida cuando el correo no está confirm
     await expect(
       page.getByRole("button", { name: /contratar|registrar tarjeta|elegir/i }).first(),
     ).toBeVisible();
+  });
+
+  test("5) el aviso sale en Configuracion, que es por donde el taller SI pasa", async ({ page }) => {
+    // ⚠️ ESTE CASO NACE DE UN FALSO VERDE (14-sep). El aviso se implemento solo
+    // en SuscripcionPage (/suscripcion) y este spec lo daba por bueno... pero
+    // durante la prueba el taller TIENE acceso: nadie lo manda a /suscripcion.
+    // Entra por Configuracion -> Mi suscripcion, que renderiza otro componente
+    // (SuscripcionManager), y ahi el aviso no existia. Verde en el spec, ausente
+    // en la pantalla. Probar el lugar correcto es parte del contrato.
+    await conAvisoDeCorreo(page);
+    await entrarComo(page, DUENO);
+    await page.goto("/configuracion");
+
+    const aviso = page.getByRole("status").filter({ hasText: /te falta confirmar tu correo/i });
+    await expect(aviso).toBeVisible({ timeout: 15000 });
+    await expect(aviso).toContainText(CORREO_MAL_TECLEADO);
+    await expect(aviso, "durante la prueba se puede seguir usando la app").toContainText(
+      /puedes seguir usando la app/i,
+    );
   });
 });

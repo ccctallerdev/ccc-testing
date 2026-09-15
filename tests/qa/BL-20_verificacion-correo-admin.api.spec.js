@@ -56,7 +56,7 @@ const { signIn, claimsOf, forget, apiKeyPublica } = require("../../qaAuth");
  *   2  ROJO   el checkout no mira la verificación: deja abrir la sesión de pago
  *   3  VERDE  /public/resend-verification ya existe (la salida "se perdió")
  *   4  ROJO   no hay endpoint de cambio de correo (404)
- *   5  ROJO   ni su regla de unicidad
+ *   5  ROJO   ni el trato no-oraculo de un correo ya registrado
  *   6  ROJO   ni la sincronización de `users` cuando el cambio entra en vigor
  *   7  VERDE  con el correo verificado el checkout procede (debe SEGUIR verde)
  *
@@ -361,7 +361,7 @@ test.describe.serial("BL-20 · cambio de correo", () => {
     expect(sesion, "y puede seguir entrando con el correo viejo").toBeTruthy();
   });
 
-  test("5) el correo nuevo no puede ser el de otra cuenta", { tag: ["@api"] }, async ({ request }) => {
+  test("5) pedir un correo que ya es de otra cuenta NO lo delata (y no cambia nada)", { tag: ["@api"] }, async ({ request }) => {
     // El correo "ocupado" es una cuenta que YA existe en refac — el mismo
     // BL20_CORREO_BASE, sin alias. No se da de alta un segundo taller solo
     // para esto: cada alta deja taller + usuario + suscripción de basura, y
@@ -382,11 +382,44 @@ test.describe.serial("BL-20 · cambio de correo", () => {
       body: { email: ajeno },
     });
 
-    expect(res.status, "dos talleres no pueden pelearse una identidad").toBe(409);
-    expect(codigoDe(res)).toBe("EMAIL_EXISTS");
+    // ⚠️ EL CONTRATO CAMBIÓ el 15-sep, y a mejor: esta ruta NO DELATA que el
+    // correo ya existe. Antes respondía 409 EMAIL_EXISTS, y eso la convertiía
+    // en un buscador de cuentas ajenas — con cualquier sesión se sondea correo
+    // por correo y se averigua quién está registrado en CCC. Es el mismo
+    // criterio no-oráculo de /public/forgot y /public/resend-verification.
+    //
+    // La unicidad SIGUE respetándose: simplemente no se manda el enlace, y sin
+    // enlace no hay cambio. Quien reciba un correo que no pidió, lo ignora.
+    expect(res.status, "responder distinto aquí delataría quién tiene cuenta").toBe(200);
+    expect(codigoDe(res), "y sin código de error que lo delate").toBeNull();
 
     const doc = await docDeUsuario(ctx.uid);
-    expect(doc.pendingEmail, "y el pendiente anterior no se pisa con uno rechazado").toBe(CORREO_BUENO);
+    // El estado observable también tiene que ser el mismo: si `pendingEmail`
+    // solo se guardara cuando el correo está libre, bastaría leer el propio
+    // perfil para saberlo y el oráculo volvería por la puerta de atrás.
+    expect(doc.pendingEmail, "el pendiente se guarda igual, exista o no el correo").toBe(ajeno);
+
+    // Y lo que de verdad importa: NADA cambió en la cuenta ajena ni en la propia.
+    const duenoAjeno = await usuarioEnAuth(ajeno);
+    expect(duenoAjeno.uid, "la cuenta ajena queda intacta").toBe(dueno.uid);
+    const propia = await usuarioEnAuth(CORREO_MALO);
+    expect(propia, "y el correo propio sigue siendo el de siempre").not.toBeNull();
+  });
+
+  test("5-bis) se vuelve a pedir el correo bueno, para dejar el pendiente correcto", { tag: ["@api"] }, async ({ request }) => {
+    // El caso 5 dejo `pendingEmail` apuntando al correo ajeno (a proposito: el
+    // estado no puede delatar nada). Antes de confirmar hay que volver a pedir
+    // el bueno, que es lo que haria el dueno al ver que no le llego nada.
+    const token = await signIn(CORREO_MALO, PASSWORD);
+    const res = await api(request, {
+      metodo: "post",
+      ruta: "/users/me/email-change",
+      token,
+      body: { email: CORREO_BUENO },
+    });
+    expect(res.status).toBe(200);
+    const doc = await docDeUsuario(ctx.uid);
+    expect(doc.pendingEmail).toBe(CORREO_BUENO);
   });
 
   test("6) al confirmar, el correo nuevo entra en vigor y `users` queda sincronizado", { tag: ["@api"] }, async ({ request }) => {
