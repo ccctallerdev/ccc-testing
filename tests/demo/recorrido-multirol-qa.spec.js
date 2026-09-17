@@ -119,7 +119,7 @@ function correoDeRol(correoDueno, sufijo) {
 const EQUIPO = {
   gerente: {
     etiqueta: "Gerente",
-    rol: "SUPER_ADMIN", // → admin
+    rol: "ADMIN", // → admin (Administrador — BL-14)
     nombre: "Mónica",
     apellido: "Salazar",
     email: process.env.EMAIL_GERENTE || correoDeRol(DUENO_EMAIL, "gerente"),
@@ -161,7 +161,7 @@ const EQUIPO = {
 
 const DUENO = {
   etiqueta: "Dueño",
-  rol: "ADMIN", // → owner
+  rol: "SUPER_ADMIN", // → owner (Dueño — BL-14)
   email: DUENO_EMAIL,
   password: DUENO_PASSWORD,
   veEnMenu: "Usuarios",
@@ -377,10 +377,10 @@ test(
     await test.step("1) Dueño: entra, y da de alta al equipo con sus roles", async () => {
       await entrarComo(page, dueno);
 
-      // El claim del dueño debe ser ADMIN (→ owner). Si esto falla, el resto
+      // El claim del dueño debe ser SUPER_ADMIN (→ owner, BL-14). Si esto falla, el resto
       // del recorrido no tendría sentido.
       const claims = claimsOf(await signIn(dueno.email, dueno.password));
-      expect(claims.role, "el admin del taller debe tener claim ADMIN").toBe("ADMIN");
+      expect(claims.role, "el Dueño del taller debe tener claim SUPER_ADMIN (BL-14)").toBe("SUPER_ADMIN");
 
       for (const [clave, persona] of Object.entries(EQUIPO)) {
         const id = await asegurarUsuario(request, dueno, persona);

@@ -72,7 +72,7 @@ if (!usarEmulador && process.env.AUTH_REAL === "1") {
   delete process.env.AUTH_EMU;
 }
 
-/** idToken del usuario de pruebas (claim role=ADMIN → owner). Cacheado. */
+/** idToken del usuario de pruebas (claim role=SUPER_ADMIN → owner, BL-14). Cacheado. */
 async function getApiToken() {
   try {
     return await signIn(EMAIL, PASSWORD);

@@ -247,7 +247,7 @@ test.describe("Cancelar entrada — deshacer alta vs. solo desafiliar", () => {
     const userRef = db.collection("users").doc(uid);
     await userRef.set({
       uid, email, name: "Staff", firstSurname: "Undo", secondSurname: "",
-      phone: `67${s.slice(-8)}`, rol: "ADMIN", idWorkshop: ID_WORKSHOP, country: "México",
+      phone: `67${s.slice(-8)}`, rol: "SUPER_ADMIN", idWorkshop: ID_WORKSHOP, country: "México",
       photoURL: "", isDeleted: false, createdAt: new Date(), updatedAt: new Date(),
     });
     const clientRef = db.collection("clients").doc();

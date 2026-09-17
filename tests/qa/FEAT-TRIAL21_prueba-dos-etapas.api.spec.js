@@ -182,8 +182,8 @@ test.describe.serial("FEAT-TRIAL21 · prueba de dos etapas (API, contra refac)",
     } else {
       ctx.idWorkshop = claims.idWorkshop;
     }
-    // El claim ADMIN es el DUEÑO (ver roles-nombres-claim: SUPER_ADMIN es el Administrador).
-    expect(claims.role, "quien se registra queda como Dueño").toBe("ADMIN");
+    // BL-14 (17-sep-2026): el claim del Dueño es SUPER_ADMIN — los nombres quedaron al derecho.
+    expect(claims.role, "quien se registra queda como Dueño").toBe("SUPER_ADMIN");
     ctx.uid = claims.user_id || claims.sub || null;
   });
 

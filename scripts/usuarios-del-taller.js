@@ -27,12 +27,12 @@ if (!ID_WORKSHOP) {
 }
 
 // Orden de la matriz de roles, no alfabético: se lee de arriba abajo igual que
-// el organigrama. ⚠️ TRAMPA conocida: el claim ADMIN es el **Dueño** y
-// SUPER_ADMIN es el **Administrador** (roles-nombres-claim).
-const ORDEN = ["ADMIN", "SUPER_ADMIN", "ASESOR", "MECANICO", "COMPRAS", "TECH_SUPPORT"];
+// el organigrama. BL-14 (17-sep-2026): la trampa se corrigió — SUPER_ADMIN
+// es el Dueño y ADMIN el Administrador, como cualquiera supondría.
+const ORDEN = ["SUPER_ADMIN", "ADMIN", "ASESOR", "MECANICO", "COMPRAS", "TECH_SUPPORT"];
 const ALIAS = {
-  ADMIN: "Dueño",
-  SUPER_ADMIN: "Administrador",
+  SUPER_ADMIN: "Dueño",
+  ADMIN: "Administrador",
   ASESOR: "Asesor",
   MECANICO: "Mecánico",
   COMPRAS: "Compras",

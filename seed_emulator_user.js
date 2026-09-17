@@ -4,7 +4,7 @@
  *
  * Crea:
  *   - Usuario de Auth (emulador):  prueba@ccc.test / prueba123
- *   - users/{uid} en Firestore con rol ADMIN e idWorkshop = "taller-prueba"
+ *   - users/{uid} en Firestore con rol SUPER_ADMIN (Dueño, BL-14) e idWorkshop = "taller-prueba"
  *   - workshops/{idWorkshop} mínimo
  *
  * USO:
@@ -59,12 +59,12 @@ async function main() {
 
   // 1b) Q20/roles: el backend ahora autoriza por el CUSTOM CLAIM firmado
   // (`role`), no por el campo de Firestore. Sin claim, TODA la API responde
-  // 403 y la suite entera truena. ADMIN = Dueño (owner) en el nuevo mapeo.
+  // 403 y la suite entera truena. SUPER_ADMIN = Dueño (owner) desde BL-14 (17-sep-2026).
   // Aislamiento multi-tenant: el claim firmado también lleva `idWorkshop`
   // (igual que en prod tras el Paso 1). El middleware verifyWorkshopAccess lo
   // usa para bloquear el acceso a talleres ajenos.
-  await auth.setCustomUserClaims(uid, { role: "ADMIN", idWorkshop: ID_WORKSHOP });
-  console.log(`✅ Custom claim role='ADMIN' (owner) idWorkshop='${ID_WORKSHOP}' asignado a ${EMAIL}`);
+  await auth.setCustomUserClaims(uid, { role: "SUPER_ADMIN", idWorkshop: ID_WORKSHOP });
+  console.log(`✅ Custom claim role='SUPER_ADMIN' (owner — BL-14) idWorkshop='${ID_WORKSHOP}' asignado a ${EMAIL}`);
 
   // 2) Doc de usuario en Firestore (la app carga userData desde aquí).
   //    El campo es `uid` (igual que en la base real), NO `id`.
@@ -75,7 +75,7 @@ async function main() {
       firstSurname: "Prueba",
       secondSurname: "",
       email: EMAIL,
-      rol: "ADMIN",
+      rol: "SUPER_ADMIN",
       idWorkshop: ID_WORKSHOP,
       isActive: true,
       isDeleted: false,
@@ -84,7 +84,7 @@ async function main() {
     },
     { merge: true },
   );
-  console.log(`✅ Firestore users/${uid} (rol ADMIN, idWorkshop ${ID_WORKSHOP})`);
+  console.log(`✅ Firestore users/${uid} (rol SUPER_ADMIN, idWorkshop ${ID_WORKSHOP})`);
 
   // 2b) Mecánico del taller (el asistente de nueva entrada exige asignar uno).
   await db.collection("users").doc("mecanico-prueba").set(

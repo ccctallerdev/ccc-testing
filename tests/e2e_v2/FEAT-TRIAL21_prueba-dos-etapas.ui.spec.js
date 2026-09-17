@@ -1,7 +1,7 @@
 const { test, expect } = require("@playwright/test");
 const fs = require("fs");
 const path = require("path");
-const { db } = require("../../qaAdmin");
+const { db, auth } = require("../../qaAdmin");
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -343,6 +343,13 @@ test.describe("FEAT-TRIAL21 · prueba de dos etapas por pantalla", () => {
       test.skip(SIN_STRIPE, "TRIAL_SIN_STRIPE=1: se omite el pago");
 
       await test.step("4) al registrar la tarjeta arrancan 7 días y no se pierde nada", async () => {
+        // BL-20 (15-sep): el checkout exige el correo VERIFICADO — en el mundo
+        // real el dueño da clic al enlace del correo; aquí lo verifica el
+        // Admin SDK para no depender del buzón. El muro en sí tiene su propio
+        // spec (BL-20_muro-correo.ui): este recorrido prueba el flujo feliz.
+        const cuentaDueno = await auth().getUserByEmail(ADMIN.correo);
+        await auth().updateUser(cuentaDueno.uid, { emailVerified: true });
+        await page.reload();
         await page.getByRole("button", { name: /continuar 7 d[ií]as gratis/i }).first().click();
         await page.waitForURL(/checkout\.stripe\.com/, { timeout: 45000 });
 
