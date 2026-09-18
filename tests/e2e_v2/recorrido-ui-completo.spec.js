@@ -1296,8 +1296,14 @@ test(
 
         // OJO: el boton se deshabilita cuando YA es el valor activo
         // (`disabled={saving || active}`), asi que "deshabilitado" aqui significa
-        // "ya quedo en Completo". Solo se pulsa si sigue habilitado.
-        if (await completo.isEnabled()) await completo.click();
+        // "ya quedo en Completo". Solo se pulsa si sigue habilitado — y si se
+        // deshabilita a MITAD del clic (la tarjeta refresca tras la recepcion
+        // y puede aterrizar ya en Completo: isEnabled() y el clic son dos
+        // momentos distintos), eso tambien es exito, no timeout. La unica
+        // verdad es la asercion de abajo: deshabilitado = quedo en Completo.
+        if (await completo.isEnabled()) {
+          await completo.click({ timeout: 5000 }).catch(() => {});
+        }
         await expect(
           completo,
           "la OS no quedó marcada como «Completo»: el paso 8 se va a trabar",
