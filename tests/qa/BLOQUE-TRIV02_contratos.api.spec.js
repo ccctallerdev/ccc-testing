@@ -21,7 +21,10 @@ const { authHeaders } = require("#apiToken");
  *   $env:AUTH_REAL="1"; $env:SKIP_SEED="1"
  *   $env:ID_WORKSHOP="G85FhlhedkD4L4CEDWvW"
  *   $env:SEED_EMAIL="rsv_gpa@outlook.com"; $env:SEED_PASSWORD="admin123"
- *   $env:E2E_CAR_ID="<id de un auto ENTREGADO>"; $env:E2E_CLIENT_ID="<su cliente>"
+ *   # NADA de ids a mano: con SEED_EMAIL/SEED_PASSWORD basta. El spec resuelve
+ *   # el taller desde /users/me de esa cuenta, busca ahí un auto entregado y
+ *   # crea el alta en ese mismo taller. E2E_CAR_ID/E2E_CLIENT_ID e ID_WORKSHOP
+ *   # solo son atajos opcionales para forzar un auto concreto.
  *   npx playwright test --project=qa tests/qa/BLOQUE-TRIV02_contratos.api.spec.js
  *
  * Los casos sin datos se marcan SKIP con el motivo: nunca pasan en verde de gratis.
@@ -43,15 +46,48 @@ async function llamar(request, method, path, data) {
   return { status: res.status(), json };
 }
 
+/**
+ * Descubrimiento para no copiar ids a mano:
+ *  - autoEntregado: primer auto del taller con `lastServiceAt` (el sello que
+ *    se pone al ENTREGAR, OBS31-12). Se puede forzar con E2E_CAR_ID/E2E_CLIENT_ID.
+ *  - tallerDeLaSesion: el taller al que pertenece la cuenta con la que se corre
+ *    (GET /users/me). El alta se crea AHI, no en un ID_WORKSHOP fijo, para que
+ *    no truene con 403 si SEED_EMAIL es de otro taller.
+ */
+let cacheAuto;
+async function autoEntregado(request) {
+  if (CAR_ID && CLIENT_ID) return { carId: CAR_ID, clientId: CLIENT_ID, fuente: "env" };
+  if (cacheAuto !== undefined) return cacheAuto;
+  let hallado = null;
+  const taller = ID_WORKSHOP || (await tallerDeLaSesion(request));
+  if (taller) {
+    const r = await llamar(request, "get", `/clients?idWorkshop=${encodeURIComponent(taller)}&limit=100`);
+    for (const c of r.json?.data?.clients ?? []) {
+      const a = (c?.cars ?? []).find((x) => x?.lastServiceAt != null);
+      if (a) { hallado = { carId: a.id, clientId: c.id, placas: a.codeCar, fuente: "descubierto" }; break; }
+    }
+  }
+  cacheAuto = hallado;
+  return cacheAuto;
+}
+
+async function tallerDeLaSesion(request) {
+  const yo = await llamar(request, "get", "/users/me");
+  return yo.json?.data?.idWorkshop ?? yo.json?.data?.workshop?.id ?? ID_WORKSHOP;
+}
+
+const SIN_AUTO = "Ningun auto del taller tiene lastServiceAt: entrega una OS, o pasa E2E_CAR_ID/E2E_CLIENT_ID.";
+
 test.describe.configure({ mode: "default" });
 
 test.describe("BLOQUE-TRIV02 — contratos de API @api", () => {
   test("BL-48 · get-car-services solo trae OS ENTREGADAS, con deliveredAt", async ({ request }) => {
-    test.skip(!CAR_ID || !CLIENT_ID, "Faltan E2E_CAR_ID / E2E_CLIENT_ID (un auto ya entregado)");
+    const auto = await autoEntregado(request);
+    test.skip(!auto, SIN_AUTO);
     const r = await llamar(
       request,
       "get",
-      `/entries/get-car-services/${encodeURIComponent(CAR_ID)}/${encodeURIComponent(CLIENT_ID)}`,
+      `/entries/get-car-services/${encodeURIComponent(auto.carId)}/${encodeURIComponent(auto.clientId)}`,
     );
     expect(r.status, JSON.stringify(r.json)).toBe(200);
     const servicios = r.json?.data?.carServices ?? [];
@@ -64,15 +100,17 @@ test.describe("BLOQUE-TRIV02 — contratos de API @api", () => {
   });
 
   test("BL-48 · GET /cars/:id trae las placas (codeCar)", async ({ request }) => {
-    test.skip(!CAR_ID, "Falta E2E_CAR_ID");
-    const r = await llamar(request, "get", `/cars/${encodeURIComponent(CAR_ID)}`);
+    const auto = await autoEntregado(request);
+    test.skip(!auto, SIN_AUTO);
+    const r = await llamar(request, "get", `/cars/${encodeURIComponent(auto.carId)}`);
     expect(r.status, JSON.stringify(r.json)).toBe(200);
     const car = r.json?.data?.car ?? r.json?.data;
     expect(String(car?.codeCar ?? "").trim(), "sin codeCar el encabezado no puede decir de qué auto es").not.toBe("");
   });
 
   test("BL-49 · se puede crear un usuario SIN photoURL", async ({ request }) => {
-    test.skip(!ID_WORKSHOP, "Falta ID_WORKSHOP");
+    const taller = await tallerDeLaSesion(request);
+    test.skip(!taller, "No se pudo resolver el taller de la sesión (GET /users/me)");
     const S = String(Date.now()).slice(-7);
     const correo = `rsv_gpa+triv02api${S}@outlook.com`;
     const alta = await llamar(request, "post", "/users", {
@@ -81,7 +119,7 @@ test.describe("BLOQUE-TRIV02 — contratos de API @api", () => {
       phone: `55${S}1`, // 10 dígitos exactos (OBS31-08)
       password: "Roles_123!",
       rol: "ASESOR", country: "México",
-      idWorkshop: ID_WORKSHOP,
+      idWorkshop: taller,
     });
     const uid = alta.json?.data?.id ?? alta.json?.data?.uid;
     try {
