@@ -42,18 +42,21 @@ const { test, expect } = require("@playwright/test");
  */
 
 // Capacidades (permissions.config.js):
-//   servicios = CAN_VIEW_OWN_PRODUCTIVITY (owner, admin, advisor, mechanic)
-//   usuarios  = CAN_MANAGE_USERS          (owner, admin)
-//   taller    = el form del taller en Configuración solo lo ve el Dueño
+//   servicios  = CAN_VIEW_OWN_PRODUCTIVITY   (owner, admin, advisor, mechanic)
+//   usuarios   = CAN_MANAGE_USERS            (owner, admin)
+//   taller     = el form del taller en Configuración solo lo ve el Dueño
+//   entregados = CAN_REGISTER_VEHICLE_ENTRY  (owner, admin, advisor)  ← BL-51
+// OJO: RECEPCION se colapsa en ADVISOR (permissions.config.js), por eso comparte
+// banderas con Asesor. COMPRAS no tiene `servicios`, así que ni llega a /servicios.
 const ROLES = [
-  { nombre: "Dueño",         clave: "DUENO",         servicios: true,  usuarios: true,  taller: true,
+  { nombre: "Dueño",         clave: "DUENO",         servicios: true,  usuarios: true,  taller: true,  entregados: true,
     email: process.env.ROL_DUENO_EMAIL || process.env.SEED_EMAIL || "rsv_gpa@outlook.com",
     pass: process.env.ROL_DUENO_PASS || process.env.SEED_PASSWORD || "admin123" },
-  { nombre: "Administrador", clave: "ADMINISTRADOR", servicios: true,  usuarios: true,  taller: false },
-  { nombre: "Asesor",        clave: "ASESOR",        servicios: true,  usuarios: false, taller: false },
-  { nombre: "Compras",       clave: "COMPRAS",       servicios: false, usuarios: false, taller: false },
-  { nombre: "Mecánico",      clave: "MECANICO",      servicios: true,  usuarios: false, taller: false },
-  { nombre: "Recepción",     clave: "RECEPCION",     servicios: true,  usuarios: false, taller: false },
+  { nombre: "Administrador", clave: "ADMINISTRADOR", servicios: true,  usuarios: true,  taller: false, entregados: true },
+  { nombre: "Asesor",        clave: "ASESOR",        servicios: true,  usuarios: false, taller: false, entregados: true },
+  { nombre: "Compras",       clave: "COMPRAS",       servicios: false, usuarios: false, taller: false, entregados: false },
+  { nombre: "Mecánico",      clave: "MECANICO",      servicios: true,  usuarios: false, taller: false, entregados: false },
+  { nombre: "Recepción",     clave: "RECEPCION",     servicios: true,  usuarios: false, taller: false, entregados: true },
 ].map((r) => ({
   ...r,
   email: r.email || process.env[`ROL_${r.clave}_EMAIL`],
@@ -150,6 +153,38 @@ test.describe("BL-48 — Servicios del auto identifica el auto y la hora es la h
       // 4) Y la columna se llama como lo que muestra.
       await expect(page.getByText(/fecha de entrega/i)).toBeVisible();
       await page.screenshot({ path: `test-results/BL-48_${rol.clave}.png` });
+    });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// BL-51 — el botón "Vehículos Entregados" solo se le muestra a quien puede entrar
+// ─────────────────────────────────────────────────────────────────────────
+test.describe("BL-51 — Vehículos Entregados no se le ofrece a quien va a rebotar @ui", () => {
+  for (const rol of ROLES) {
+    test(`BL-51 — ${rol.nombre}`, async ({ page }) => {
+      test.skip(!rol.email || !rol.pass, `Sin credenciales para ${rol.nombre} (ROL_${rol.clave}_EMAIL/PASS)`);
+      await entrarComo(page, rol);
+      await page.goto("/servicios");
+
+      // Compras no tiene CAN_VIEW_OWN_PRODUCTIVITY: ni siquiera llega a la pantalla.
+      if (!rol.servicios) {
+        await esperarRebote(page, "/servicios");
+        return;
+      }
+
+      await expect(page.getByRole("heading", { name: /^Servicios$/ })).toBeVisible({ timeout: 20000 });
+      const boton = page.getByRole("button", { name: /veh[ií]culos entregados/i });
+
+      if (rol.entregados) {
+        await expect(boton, "este rol sí puede entrar, el botón debe estar").toBeVisible();
+        await boton.click();
+        await expect(page, "y debe llevarlo de verdad").toHaveURL(/\/servicios-entregados/, { timeout: 15000 });
+        await expect(page.getByText(/no tienes acceso/i)).toHaveCount(0);
+      } else {
+        // El bug: al Mecánico se le pintaba y solo lo rebotaba.
+        await expect(boton, "un botón que solo sabe rebotarte no se muestra").toHaveCount(0);
+      }
     });
   }
 });
