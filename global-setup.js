@@ -12,8 +12,10 @@
  * no rompe nada.
  *
  * Tres atajos que evitan fricción al correr por carpetas:
- *   · Si solo se pidió el proyecto `publico`, NO siembra: el sitio público es
- *     anónimo y no toca la base, así que basta el frontend en :3000.
+ *   · Si solo se pidieron proyectos que NO usan los emuladores, NO siembra:
+ *     `publico` (sitio anónimo, basta el frontend en :3000) y `qa` (gemelos
+ *     contra Firebase real, con su propia autenticación y siembra). Sembrar
+ *     ahí solo tronaba con ECONNREFUSED antes de llegar al primer test.
  *   · Si se exporta SKIP_SEED=1, NO siembra — para cuando `demo` corre contra
  *     PRODUCCIÓN (BASE_URL/API apuntando a controlcentralcar.com) y no hay
  *     emuladores locales levantados. Las semillas SIEMPRE apuntan a
@@ -47,8 +49,13 @@ module.exports = async () => {
     if (a.startsWith("--project=")) pedidos.push(a.slice("--project=".length));
     else if (a === "--project" && process.argv[i + 1]) pedidos.push(process.argv[i + 1]);
   });
-  if (pedidos.length > 0 && pedidos.every((n) => n === "publico")) {
-    console.log("\n🌱 Solo el sitio público: no hacen falta semillas.\n");
+  // Proyectos que viven fuera de los emuladores: `publico` es anónimo y `qa`
+  // corre contra Firebase real con su propia siembra (ver AREAS en la config).
+  const SIN_SEMILLA = new Set(["publico", "qa"]);
+  if (pedidos.length > 0 && pedidos.every((n) => SIN_SEMILLA.has(n))) {
+    console.log(
+      `\n🌱 ${pedidos.join(", ")}: no usan los emuladores, no hacen falta semillas.\n`,
+    );
     return;
   }
   if (process.env.SKIP_SEED === "1") {
