@@ -29,7 +29,7 @@ const { signIn } = require("../../qaAuth");
  *   $env:ID_WORKSHOP="<taller de pruebas de refac>"
  *   $env:SEED_EMAIL="rsv_gpa@outlook.com"; $env:SEED_PASSWORD="<contraseña>"
  *   $env:E2E_ENTRY_ID="<OS con diagnóstico>"            # para OBS31-10
- *   $env:ROL_MECANICO_EMAIL="rsv_gpa+mecanico1@outlook.com"; $env:ROL_MECANICO_PASS="Mec_123!"
+ *   $env:ROL_MECANICO_EMAIL="rsv_gpa+mecanico1@outlook.com"; $env:ROL_MECANICO_PASS="Prueba_123!"
  *   npx playwright test --project=qa tests/qa/BLOQUE-TRIV01_contratos.api.spec.js
  *
  * Los casos con guardia de datos (sin autos entregados, sin OS aprobadas con

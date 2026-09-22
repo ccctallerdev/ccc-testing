@@ -33,11 +33,11 @@ const { test, expect } = require("@playwright/test");
  *     2) ccc-frontend          → npm start        (localhost:3000)
  *   $env:BASE_URL="http://localhost:3000"; $env:SKIP_SEED="1"
  *   $env:ROL_DUENO_EMAIL="rsv_gpa@outlook.com";              $env:ROL_DUENO_PASS="admin123"
- *   $env:ROL_ADMINISTRADOR_EMAIL="rsv_gpa+admin1@outlook.com"; $env:ROL_ADMINISTRADOR_PASS="Roles_123!"
- *   $env:ROL_ASESOR_EMAIL="rsv_gpa+asesor1@outlook.com"; $env:ROL_ASESOR_PASS="Roles_123!"
- *   $env:ROL_COMPRAS_EMAIL="rsv_gpa+compras1@outlook.com"; $env:ROL_COMPRAS_PASS="Roles_123!"
- *   $env:ROL_MECANICO_EMAIL="rsv_gpa+mecanico1@outlook.com"; $env:ROL_MECANICO_PASS="Mec_123!"
- *   $env:ROL_RECEPCION_EMAIL="rsv_gpa+recepcion1@outlook.com"; $env:ROL_RECEPCION_PASS="Roles_123!"
+ *   $env:ROL_ADMINISTRADOR_EMAIL="rsv_gpa+admin1@outlook.com"; $env:ROL_ADMINISTRADOR_PASS="Prueba_123!"
+ *   $env:ROL_ASESOR_EMAIL="rsv_gpa+asesor1@outlook.com"; $env:ROL_ASESOR_PASS="Prueba_123!"
+ *   $env:ROL_COMPRAS_EMAIL="rsv_gpa+compras1@outlook.com"; $env:ROL_COMPRAS_PASS="Prueba_123!"
+ *   $env:ROL_MECANICO_EMAIL="rsv_gpa+mecanico1@outlook.com"; $env:ROL_MECANICO_PASS="Prueba_123!"
+ *   $env:ROL_RECEPCION_EMAIL="rsv_gpa+recepcion1@outlook.com"; $env:ROL_RECEPCION_PASS="Prueba_123!"
  *   # OBS31-10 necesita una OS REAL con diagnóstico (sin ella, ese caso = SKIP):
  *   $env:E2E_ENTRY_ID="<id de una entrada de refac CON diagnóstico>"
  *   npx playwright test --project=qa tests/qa/BLOQUE-TRIV01_bl46-bl33-obs31-12-obs31-10.ui.spec.js

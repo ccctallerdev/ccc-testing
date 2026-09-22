@@ -29,7 +29,7 @@ const { test, expect } = require("@playwright/test");
  *     2) ccc-frontend          → npm start        (localhost:3000)
  *   $env:BASE_URL="http://localhost:3000"
  *   $env:SKIP_SEED="1"
- *   $env:MECHANIC_EMAIL="rsv_gpa+mecanico1@outlook.com"; $env:MECHANIC_PASSWORD="Mec_123!"
+ *   $env:MECHANIC_EMAIL="rsv_gpa+mecanico1@outlook.com"; $env:MECHANIC_PASSWORD="Prueba_123!"
  *   $env:SEED_EMAIL="rsv_gpa@outlook.com"; $env:SEED_PASSWORD="admin123"
  *   # opcional para el caso 2 (botones con datos reales):
  *   $env:E2E_ENTRY_ID="<id de una entrada de refac CON diagnóstico>"
