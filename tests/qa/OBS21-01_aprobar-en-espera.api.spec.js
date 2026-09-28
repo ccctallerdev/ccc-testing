@@ -28,13 +28,18 @@ const { authHeaders } = require("#apiToken");
  *   A1  con 1 pieza de inventario + 2 de proveedor: en la bitácora EN ESPERA va
  *       ANTES que REFACCIONES y REFACCIONES no precede a "Cotización aprobada".
  *       (No depende de la duda D30.)
- *   A2  ese mismo caso: el auto queda EN ESPERA.  → depende de D30 (propuesta a).
+ *   A2  ese mismo caso: el auto llega a REFACCIONES pasando por EN ESPERA.
+ *       D30 (Roberto, 25-sep): opción (b) — se conserva la regla del 2-sep, el
+ *       abastecimiento PARCIAL (incluido el surtido de inventario) mueve el auto.
  *   B   TODAS las piezas de inventario: puede acabar en REFACCIONES, pero la
  *       bitácora debe mostrar EN ESPERA antes.  (No depende de D30.)
  *   C   CONTROL: solo proveedor → EN ESPERA y sin REFACCIONES en la bitácora.
  *   D   camino del LISTADO (botón "Aprobar" de Entrada.jsx): approve-selection
  *       y DESPUÉS PUT approvalState=APROBADA. Todo de inventario: EN ESPERA
  *       antes que REFACCIONES y nada antes de "Cotización aprobada".
+ *   F   camino del listado con el RELOJ DEL NAVEGADOR ADELANTADO 1 min: el
+ *       approvedDate lo sella el servidor, así que "Refacciones" nunca queda
+ *       antes de "Cotización aprobada" (el caso D fallaba intermitente por eso).
  *   E   approve-selection SIN aprobar (guardar la selección oficial): la OS no
  *       debe llegar a REFACCIONES — sin aprobación no hay abastecimiento que
  *       mueva el auto.
@@ -103,7 +108,7 @@ const pieza = (desc, count, extra = {}) => ({
  * Arma cliente + auto + OS + hoja + cotización con las partidas dadas y la
  * APRUEBA completa (approve-concepts). Devuelve el estado final de la OS.
  */
-async function armarYAprobar(request, S, partes, via = "conceptos") {
+async function armarYAprobar(request, S, partes, via = "conceptos", { relojAdelantoMs = 0 } = {}) {
   const cliente = await call(request, "post", "/clients", {
     fullName: `Cliente obs21-01 ${S}`,
     email: `obs2101.${S}@test.com`,
@@ -158,7 +163,7 @@ async function armarYAprobar(request, S, partes, via = "conceptos") {
     if (via === "listado") {
       ok(await call(request, "put", `/entries/${entryId}`, {
         approvalState: "APROBADA",
-        approvedDate: new Date().toISOString(),
+        approvedDate: new Date(Date.now() + relojAdelantoMs).toISOString(),
         rejectedDate: "",
       }), "PUT approvalState APROBADA");
     }
@@ -199,18 +204,19 @@ test.describe("OBS21-01 · aprobar deja EN ESPERA (con piezas de inventario) @ap
     }
   });
 
-  test("A2) mixto: el auto queda EN ESPERA (D30, propuesta a: hasta que llegue TODO lo pedido)", async ({ request }) => {
-    // FALLA ESPERADA hasta que Roberto conteste D30 (doc DUDAS_NEGOCIO_2026-09-25).
-    // Hoy rige la regla del 2-sep: abastecimiento PARCIAL → REFACCIONES. Si elige
-    // (a), se implementa y se quita esta línea; si elige (b), se invierte la aserción.
-    test.fail(true, "D30 pendiente: hoy el abastecimiento PARCIAL mueve el auto a REFACCIONES (regla del 2-sep)");
+  test("A2) mixto: con algo surtido de inventario el auto pasa a REFACCIONES, pero después de EN ESPERA (D30 = b)", async ({ request }) => {
+    // D30 respondida por Roberto el 25-sep (Respuesta Roberto DUDAS NEGOCIO
+    // 2026-09-25): opción (b). "Parcialmente debe avanzar, se conserva la regla
+    // del 2 de septiembre". Lo que no podía pasar era saltarse EN ESPERA.
     const S = unico();
     const inv = await crearArticulo(request, S, "Filtro de aire");
     const r = await armarYAprobar(request, S, [
       pieza(`Filtro de aire ${S}`, 1, { inventoryId: inv }),
       pieza(`Bujías ${S}`, 4, { supplierId: `SUP-${S}`, supplierName: "Refaccionaria ACME" }),
     ]);
-    expect(r.statusService, `con piezas aún por llegar del proveedor el auto sigue EN ESPERA. Bitácora: ${r.resumen}`).toBe("EN ESPERA");
+    expect(r.statusService, `con abastecimiento PARCIAL el auto avanza a REFACCIONES (regla del 2-sep). Bitácora: ${r.resumen}`).toBe("REFACCIONES");
+    expect(r.iEspera, `pero la bitácora debe pasar por EN ESPERA antes. Bitácora: ${r.resumen}`).toBeGreaterThanOrEqual(0);
+    expect(r.iEspera, `EN ESPERA debe ir ANTES que REFACCIONES. Bitácora: ${r.resumen}`).toBeLessThan(r.iRefacc);
   });
 
   test("B) TODO de inventario: puede llegar a REFACCIONES, pero la bitácora muestra EN ESPERA antes", async ({ request }) => {
@@ -255,5 +261,19 @@ test.describe("OBS21-01 · aprobar deja EN ESPERA (con piezas de inventario) @ap
 
     expect(r.statusService, `sin aprobar, el abastecimiento no mueve el auto. Bitácora: ${r.resumen}`).not.toBe("REFACCIONES");
     expect(r.iRefacc, `no debe haber REFACCIONES en la bitácora. Bitácora: ${r.resumen}`).toBe(-1);
+  });
+
+  test("F) listado con el reloj del navegador ADELANTADO 1 min: 'Cotización aprobada' la sella el servidor", async ({ request }) => {
+    const S = unico();
+    const inv = await crearArticulo(request, S, "Termostato");
+    const r = await armarYAprobar(request, S, [pieza(`Termostato ${S}`, 1, { inventoryId: inv })], "listado", { relojAdelantoMs: 60_000 });
+
+    expect(r.iEspera, `la bitácora debe traer EN ESPERA. Bitácora: ${r.resumen}`).toBeGreaterThanOrEqual(0);
+    expect(r.iRefacc, `todo de inventario: debe llegar a REFACCIONES. Bitácora: ${r.resumen}`).toBeGreaterThanOrEqual(0);
+    const refAt = r.hist[r.iRefacc].at;
+    expect(
+      refAt,
+      `REFACCIONES (${refAt}) no puede quedar antes de "Cotización aprobada" (${r.approvedAt}) aunque el navegador mande su propia hora`,
+    ).toBeGreaterThanOrEqual(r.approvedAt);
   });
 });
