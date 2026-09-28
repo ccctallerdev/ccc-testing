@@ -275,7 +275,7 @@ test.describe("BL-23 · el visto bueno manual de Abastecimiento mueve el auto @a
     ).toBe("REFACCIONES");
   });
 
-  test("3) lo mismo con PARCIAL, en una OS nueva", async ({ request }) => {
+  test("3) lo mismo con PARCIAL, en una OS nueva (ya aprobada)", async ({ request }) => {
     // OS nueva: la del caso 2 ya avanzo (o deberia haberlo hecho) y la maquina
     // de estados no retrocede, asi que reusarla no probaria nada.
     const cliente = await call(request, "post", "/clients", {
@@ -302,6 +302,36 @@ test.describe("BL-23 · el visto bueno manual de Abastecimiento mueve el auto @a
     expect(auto.status, `auto: ${JSON.stringify(auto.body)}`).toBeLessThan(300);
     expect(os.status, `OS: ${JSON.stringify(os.body)}`).toBeLessThan(300);
     const otraOS = idOf(os.data, "la OS");
+
+    // OBS21-01 (25-sep): el visto bueno de Abastecimiento solo mueve un auto con
+    // la cotizacion APROBADA. Este caso marcaba PARCIAL en una OS nunca aprobada
+    // y esperaba REFACCIONES — justo el salto que reporto Roberto (Refacciones
+    // antes de "Cotizacion aprobada"). Se aprueba primero, como en el taller:
+    // aprobar → EN ESPERA → visto bueno PARCIAL → REFACCIONES.
+    const hoja = await call(request, "post", `/entries/${otraOS}/service-sheet`, {
+      car_items: ["Documentos", "Llave"], checks: ["Servicio de Frenos"],
+      isCheckAll: false, observations: "spec BL-23 parcial", km: 62000, fuel_tank: "1/2",
+    });
+    expect(hoja.status, `hoja: ${JSON.stringify(hoja.body)}`).toBeLessThan(300);
+    const cot = await call(request, "post", `/entries/${otraOS}/quotes`, {
+      diagnostic: "Frenos: balatas al límite",
+      labor: [{ description: "Cambio de balatas", count: 1, unitPrice: 300, cost: 300, subtotal: 300, state: true }],
+      parts: [{
+        description: `Balatas traseras ${S}`, count: 2,
+        unitPrice: PRECIO, cost: PRECIO, subtotal: 2 * PRECIO, state: true,
+        costProveedor: 600, utilidad: 29.41,
+        supplierId: `SUP-${S}`, supplierName: "Refaccionaria ACME", availability: "VERDE",
+      }],
+      status: 2, clientBringsParts: false, stage: "COTIZACION",
+    });
+    expect(cot.status, `cotización: ${JSON.stringify(cot.body)}`).toBeLessThan(300);
+    const ap = await call(request, "post", `/entries/${otraOS}/quotes/${idOf(cot.data, "la cotización")}/approve-concepts`, {
+      approvedParts: [0], approvedLabor: [0],
+    });
+    expect(ap.status, `aprobación: ${JSON.stringify(ap.body)}`).toBeLessThan(300);
+    const antes = await call(request, "get", `/entries/${otraOS}`);
+    const ea = antes.data?.descripcion && typeof antes.data.descripcion === "object" ? antes.data.descripcion : antes.data;
+    expect(ea?.statusService, "recién aprobada (pieza de proveedor sin recibir) la OS queda EN ESPERA").toBe("EN ESPERA");
 
     const put = await call(request, "put", `/entries/${otraOS}`, { repairReadiness: "PARCIAL" });
     expect(put.status, JSON.stringify(put.body)).toBeLessThan(300);
