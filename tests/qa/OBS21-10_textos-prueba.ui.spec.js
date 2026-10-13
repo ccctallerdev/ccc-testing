@@ -229,7 +229,9 @@ test.describe("OBS21-10 · caso 5 — regreso de la pasarela @ui", () => {
     await page.goto("/suscripcion/exito");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("¡Listo, tu tarjeta quedó registrada!");
     const texto = page.getByTestId("texto-exito-tarjeta");
-    await expect(texto).toContainText("no se te cobró nada hoy");
+    // BL-67: sin el dato del checkout (página abierta a mano) el texto es neutro;
+    // "no se te cobró nada" solo sale cuando hubo días gratis (ver BL-67 caso 3).
+    await expect(texto).toContainText("Mi suscripción");
     await expect(page.locator("body")).not.toContainText(/prueba de 14 días|el día 15/);
     // Hallazgo de la prueba manual (9-oct): el respaldo SIN sesión decía "tu pago se guardó",
     // que chocaba con "no se te cobró nada hoy".
