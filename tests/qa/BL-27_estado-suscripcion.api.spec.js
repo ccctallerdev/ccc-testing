@@ -31,11 +31,26 @@ async function llamar(request, path, conSesion = true) {
   return { status: res.status(), json };
 }
 
-async function taller(request) {
-  if (ID_WORKSHOP) return ID_WORKSHOP;
-  const yo = await llamar(request, "/users/me");
-  return yo.json?.data?.idWorkshop ?? yo.json?.data?.workshop?.id ?? "";
+/**
+ * Taller de la sesión. No hay GET /users/me para la web: se saca el uid del
+ * token (claim user_id) y se lee GET /users/:uid. ID_WORKSHOP sigue sirviendo
+ * de atajo. (Antes se pedía /users/me y solo funcionaba con ID_WORKSHOP puesto.)
+ */
+async function tallerDeLaSesion(request) {
+  if (process.env.ID_WORKSHOP) return process.env.ID_WORKSHOP;
+  const { Authorization } = await authHeaders();
+  const token = String(Authorization || "").replace(/^Bearer\s+/, "");
+  let uid = "";
+  try {
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString("utf8"));
+    uid = payload.user_id || payload.uid || payload.sub || "";
+  } catch (_) { /* token ilegible */ }
+  if (!uid) return "";
+  const res = await request.get(`${API}/users/${encodeURIComponent(uid)}`, { headers: { Authorization } });
+  const json = await res.json().catch(() => null);
+  return json?.data?.idWorkshop ?? "";
 }
+const taller = tallerDeLaSesion;
 
 test.describe.configure({ mode: "default" });
 

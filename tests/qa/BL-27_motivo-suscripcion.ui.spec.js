@@ -139,6 +139,36 @@ for (const caso of CASOS) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Caso 7 — hallazgo de la prueba manual (9-oct): con el servidor caído falla
+// la carga de la CUENTA antes que la del plan. Debe avisar igual (no solo un
+// toast) y "Volver a intentar" debe regresar al taller cuando el back vuelve.
+// ─────────────────────────────────────────────────────────────────────────
+test.describe("BL-27 · caso 7 — la cuenta no carga (users 500) → 'no pudimos cargar tu cuenta' @ui", () => {
+  for (const rol of ROLES) {
+    test(`BL-27 caso 7 — ${rol.nombre}`, async ({ page }, testInfo) => {
+      test.skip(!rol.email || !rol.pass, `Sin credenciales para ${rol.nombre} (ROL_${rol.clave}_EMAIL/PASS)`);
+      const RE_USERS = /\/v1\/users\/(?!me)[^/?]+/;
+      await page.route(RE_USERS, (route) =>
+        route.request().method() === "GET"
+          ? route.fulfill({ status: 500, contentType: "application/json", body: "{}" })
+          : route.continue(),
+      );
+      await entrar(page, rol);
+      await expect(page).toHaveURL(/\/suscripcion/, { timeout: 30000 });
+      await expect(aviso(page), "antes solo había un toast").toBeVisible({ timeout: 20000 });
+      await expect(aviso(page)).toHaveAttribute("data-motivo", "perfil_no_cargado");
+      await expect(aviso(page)).toContainText("No pudimos cargar tu cuenta");
+      await expect(aviso(page)).not.toContainText(/No encontramos una suscripción/);
+      await page.screenshot({ path: testInfo.outputPath(`c7-${rol.clave}.png`), fullPage: true });
+
+      await page.unroute(RE_USERS);
+      await aviso(page).getByRole("button", { name: /Volver a intentar/ }).click();
+      await expect(page.getByText("No pudimos cargar tu cuenta")).toHaveCount(0, { timeout: 30000 });
+    });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────
 // Caso 5 (guarda) — prueba sin tarjeta vencida: la pantalla ya lo explica
 // (OBS21-10); NO debe aparecer un segundo aviso encima.
 // ─────────────────────────────────────────────────────────────────────────
